@@ -1,0 +1,7 @@
+*.netcdf
+*.gz
+Data/
+.idea/*
+.nfs*
+.control/
+*.pyc
