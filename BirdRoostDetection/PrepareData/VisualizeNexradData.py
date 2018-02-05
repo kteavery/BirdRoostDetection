@@ -1,3 +1,4 @@
+# TODO : cleanup file and method headers
 import matplotlib
 
 # matplotlib.use('agg')  # Required for running on schooner
@@ -16,6 +17,7 @@ from BirdRoostDetection.PrepareData import AWSNexradData
 # If image is from before 2012, make sure dualPolarization is set to false,
 # seince images before this time have fewer fields
 def visualizeLDMdata(radar, save, dualPolarization=False):
+    # TODO : create docstring
     display = pyart.graph.RadarDisplay(radar)
     if (dualPolarization):
         fig = plt.figure(figsize=(9, 9))
@@ -33,6 +35,7 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
     ncols = 2
     nrows = len(plots) / 2
     for plotno, plot in enumerate(plots, start=1):
+        # TODO : find better ranges supported by the literature
         vmin = None
         vmax = None
         if (plot[0] == 'velocity'):
@@ -90,6 +93,7 @@ def main():
 
     visualizeLDMdata(radar, False, True)
 
+    # TODO clean up or delete commented out code
     """
     for i, file in enumerate(fileNames):
         if os.path.basename(fullname)[0:17] in file:
