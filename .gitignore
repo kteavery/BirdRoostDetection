@@ -1,6 +1,6 @@
 *.netcdf
 *.gz
-Data/
+MLData/
 .idea/*
 .nfs*
 .control/
