@@ -1,11 +1,12 @@
-*.netcdf
-*.gz
-MLData/
 !MLData/README.md
-.idea/*
-.nfs*
 .control/
+.idea/*
+.nfs/*
+*.gz
+*.netcdf
 *.pyc
 BirdRoostDetection.egg-info/*
 build/*
 dist/*
+MLData/
+QuickCode
