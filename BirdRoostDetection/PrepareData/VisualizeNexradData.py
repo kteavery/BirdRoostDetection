@@ -35,27 +35,34 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
     ncols = 2
     nrows = len(plots) / 2
     for plotno, plot in enumerate(plots, start=1):
+        mask_tuple = ['cross_correlation_ratio', .975]
+        cmap = None
         # TODO : find better ranges supported by the literature
-        vmin = None
-        vmax = None
-        if (plot[0] == 'velocity'):
-            vmin = -25
-            vmax = 25
         if (plot[0] == 'reflectivity'):
-            vmin = -25
-            vmax = 35
+            vmin = -20
+            vmax = 30
+        if (plot[0] == 'velocity'):
+            mask_tuple = None
+            vmin = -20
+            vmax = 20
+            cmap = 'coolwarm'
         if (plot[0] == 'differential_reflectivity'):
             vmin = -4
-            vmax = 6
+            vmax = 8
+            cmap='coolwarm'
         if (plot[0] == 'cross_correlation_ratio'):
             vmin = .3
             vmax = .95
+            cmap='jet'
+
 
         ax = fig.add_subplot(nrows, ncols, plotno)
         display.plot(plot[0], plot[2], ax=ax, title=plot[1],
-                     colorbar_label='',
                      vmin=vmin,
                      vmax=vmax,
+                     cmap=cmap,
+                     mask_tuple=mask_tuple,
+                     colorbar_label='',
                      mask_outside=True,
                      axislabels=(
                          'East-West distance from radar (km)' if plotno == 6
@@ -87,7 +94,8 @@ def main():
     #fileNames = AWSNexradData.getFileNamesFromBucket(bucket, bucketName)
     #print fileNames
 
-    fullname = '2015/07/04/KMOB/KMOB20150704_111944_V06.gz'
+    fullname = '2015/07/04/KMOB/KMOB20150704_111944_V06.gz' # Martin Roost
+    #fullname = '2015/07/02/KMOB/KMOB20150702_112749_V06.gz' # Weather
     file = AWSNexradData.downloadDataFromBucket(bucket, fullname)
     radar = pyart.io.read_nexrad_archive(file.name)
 
