@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pyart.graph
 import pyart.io
 from BirdRoostDetection.PrepareData import AWSNexradData
+import os
 
 
 # This method takes code from the following website, originally written by Lak,
@@ -25,7 +26,10 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         fig = plt.figure(figsize=(9, 4.5))
     # display the lowest elevation scan data
     plots = []
-    plots.append(['reflectivity', 'Reflectivity (dBZ)', 0])
+    plots.append(['reflectivity', 'Reflectivity_0 (dBZ)', 0])
+    # plots.append(['reflectivity', 'Reflectivity_1 (dBZ)', 2])
+    # plots.append(['reflectivity', 'Reflectivity_2 (dBZ)', 4])
+    # plots.append(['reflectivity', 'Reflectivity_3 (dBZ)', 8])
     plots.append(['velocity', 'Velocity (m/s)', 1])
     if (dualPolarization):
         plots.append(['differential_reflectivity',
@@ -35,8 +39,13 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
     ncols = 2
     nrows = len(plots) / 2
     for plotno, plot in enumerate(plots, start=1):
-        mask_tuple = ['cross_correlation_ratio', .975]
+        mask_tuple = None
+        if (dualPolarization):
+            mask_tuple = ['cross_correlation_ratio', .975]
+
         cmap = None
+        vmin = None
+        vmax = None
         # TODO : find better ranges supported by the literature
         if (plot[0] == 'reflectivity'):
             vmin = -20
@@ -49,12 +58,11 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         if (plot[0] == 'differential_reflectivity'):
             vmin = -4
             vmax = 8
-            cmap='coolwarm'
+            cmap = 'coolwarm'
         if (plot[0] == 'cross_correlation_ratio'):
             vmin = .3
             vmax = .95
-            cmap='jet'
-
+            cmap = 'jet'
 
         ax = fig.add_subplot(nrows, ncols, plotno)
         display.plot(plot[0], plot[2], ax=ax, title=plot[1],
@@ -70,7 +78,8 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
                          '',
                          'North-South distance from radar (km)' if plotno == 1
                          else ''))
-        display.set_limits((-300, 300), (-300, 300), ax=ax)
+        radius = 250
+        display.set_limits((-radius, radius), (-radius, radius), ax=ax)
 
         display.set_aspect_ratio('equal', ax=ax)
         display.plot_range_rings(range(100, 350, 100), lw=0.5, col='black',
@@ -88,31 +97,32 @@ def main():
     conn = AWSNexradData.ConnectToAWS()
     bucket = AWSNexradData.GetNexradBucket(conn)
 
-    #bucketName = AWSNexradData.getBucketName(2017, 10, 21, 'KTLX')
+    bucketName = AWSNexradData.getBucketName(2017, 9, 06, 'KLIX')
 
     # Get list of all files from bucket
-    #fileNames = AWSNexradData.getFileNamesFromBucket(bucket, bucketName)
-    #print fileNames
+    fileNames = AWSNexradData.getFileNamesFromBucket(bucket, bucketName)
+    # print fileNames
 
-    fullname = '2015/07/04/KMOB/KMOB20150704_111944_V06.gz' # Martin Roost
-    #fullname = '2015/07/02/KMOB/KMOB20150702_112749_V06.gz' # Weather
+    # fullname = '2015/07/04/KMOB/KMOB20150704_111944_V06.gz' # Martin Roost
+    # fullname = '2015/07/02/KMOB/KMOB20150702_112749_V06.gz' # Weather
+    fullname = '2017/09/06/KLIX/KLIX20170906_112431_V06'
     file = AWSNexradData.downloadDataFromBucket(bucket, fullname)
     radar = pyart.io.read_nexrad_archive(file.name)
 
-    visualizeLDMdata(radar, False, True)
+    # visualizeLDMdata(radar, False, True)
 
     # TODO clean up or delete commented out code
-    """
+
     for i, file in enumerate(fileNames):
         if os.path.basename(fullname)[0:17] in file:
             print i, fullname
             file_index = i
+            print file_index
 
-    for i in range(file_index - 3, file_index + 4):
-        file = downloadDataFromBucket(bucket, fileNames[i])
+    for i in range(file_index - 3, file_index + 7):
+        file = AWSNexradData.downloadDataFromBucket(bucket, fileNames[i])
         radar = pyart.io.read_nexrad_archive(file.name)
-        visualizeLDMdata(radar, 'TestImg_{}.png'.format(i), True)
-    """
+        visualizeLDMdata(radar, 'TestImg_{}.png'.format(i), False)
 
     conn.close()
 
