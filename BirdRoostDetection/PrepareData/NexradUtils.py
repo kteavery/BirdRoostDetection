@@ -1,6 +1,8 @@
 import pyart.io.nexrad_common as nexrad
 import sys
 from gpxpy import geo
+import os
+import datetime
 
 
 def getRadarNames(minLat, maxLat, minLon, maxLon):
@@ -95,6 +97,21 @@ def getClosestRadar(lat, lon):
             radar = key
             min_distance = distance
     return radar, min_distance
+
+
+def getTimeStampFromFilename(filename):
+    """Get the timestamp from the AWS filename.
+
+    Args:
+        filename: The name of the AWS file.
+
+    Returns:
+        datetime object, the date corresponding with the radar datum timestamp.
+    """
+    base_f = os.path.basename(filename)
+    radar_date = datetime.datetime.strptime(base_f[4:19],
+                                            '%Y%m%d_%H%M%S')
+    return radar_date
 
 
 def main():

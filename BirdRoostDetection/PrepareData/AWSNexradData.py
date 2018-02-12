@@ -3,6 +3,8 @@ import tempfile
 import boto
 import pyart.graph
 import pyart.io
+import os
+import datetime
 
 
 def ConnectToAWS():
@@ -67,6 +69,19 @@ def getFileNamesFromBucket(bucket, bucketName):
     return names
 
 
+def getRadarDataClosestToTime(datetime, radar):
+    """
+
+    Args:
+        datetime:
+        radar:
+
+    Returns:
+
+    """
+    None
+
+
 def downloadDataFromBucket(bucket, fileName):
     """ Download a single NEXRAD radar datum.
 
@@ -83,6 +98,43 @@ def downloadDataFromBucket(bucket, fileName):
     localfile = tempfile.NamedTemporaryFile()
     s3key.get_contents_to_filename(localfile.name)
     return localfile
+
+
+def getFileNameCloseToDatetime(bucket, radar, roost_date):
+    """
+
+    Args:
+        bucket:
+        radar:
+        roost_date:
+
+    Returns:
+
+    """
+    bucketName = getBucketName(year=roost_date.year,
+                               month=roost_date.month,
+                               day=roost_date.day,
+                               radar=radar)
+
+    files = getFileNamesFromBucket(bucket, bucketName)
+    min_dif = datetime.timedelta.max
+    AWSFile = None
+    for f in files:
+        base_f = os.path.basename(f)
+
+        if base_f[0:4] == radar and base_f[13:15] > '08' and base_f[
+                                                             13:15] < '12':
+
+            radar_date = datetime.datetime.strptime(base_f[4:19],
+                                                    '%Y%m%d_%H%M%S')
+            dif = max(roost_date - radar_date, radar_date - roost_date)
+            if (min_dif > dif):
+                min_dif = dif
+                AWSFile = f
+            else:
+                break
+
+    return AWSFile
 
 
 def main():
