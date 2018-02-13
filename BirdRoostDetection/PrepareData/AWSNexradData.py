@@ -47,7 +47,11 @@ def getBucketName(year, month, day, radar):
     Returns:
         The bucket name as a string (e.g. YYYY/MM/DD/KLMN/).
     """
-    return "%04d/%02d/%02d/%s/" % (year, month, day, radar)
+    # Get the name of the buck for a year, month, day and radar
+    try:
+        return "%04d/%02d/%02d/%s/" % (year, month, day, radar)
+    except:
+        return "%s/%s/%s/%s/" % (year, month, day, radar)
 
 
 def getFileNamesFromBucket(bucket, bucketName):

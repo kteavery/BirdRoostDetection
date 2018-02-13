@@ -113,6 +113,18 @@ def getTimeStampFromFilename(filename):
                                             '%Y%m%d_%H%M%S')
     return radar_date
 
+def getRadarFromFilename(filename):
+    """Get the radar name from the AWS filename.
+
+    Args:
+        filename: The name of the AWS file.
+
+    Returns:
+        4 character name of radar, string.
+    """
+    base_f = os.path.basename(filename)
+    radar = base_f[0:4]
+    return radar
 
 def main():
     """Example of how to use methods of this class."""
