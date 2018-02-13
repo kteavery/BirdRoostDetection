@@ -6,14 +6,16 @@ if __name__ == '__main__':
     setup(
         name='BirdRoostDetection',
         version='1.0',
-        description='Machine Learning to locate pre migratory  bird roosts in NEXRAD radar data',
+        description='Machine Learning to locate pre migratory  bird roosts in '
+                    'NEXRAD radar data',
         author='Carmen Chilson',
         author_email='carmenchilson@ou.edu',
         license='MIT',
         url='https://github.com/carmenchilson/BirdRoostDetection',
         packages=[
-            'BuildModels',
-            'PrepareData'
+            'BirdRoostDetection',
+            # 'BirdRoostDetection.BuildModels',
+            'BirdRoostDetection.PrepareData'
         ],
         keywords=[
             'Machine Learning',
@@ -28,7 +30,7 @@ if __name__ == '__main__':
             'Aeroecology'
         ],
         classifiers=[
-            'Intended Audience :: Science/Research',
+            'Intended Audience :: Biology Research using Computer Science',
             'License :: OSI Approved :: MIT License',
             'Programming Language :: Python :: 2.7'
         ]
