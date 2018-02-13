@@ -1,4 +1,5 @@
 !MLData/README.md
+!MLData/ml_labels_example.csv
 .control/
 .idea/*
 .nfs/*

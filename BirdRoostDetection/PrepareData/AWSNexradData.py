@@ -69,19 +69,6 @@ def getFileNamesFromBucket(bucket, bucketName):
     return names
 
 
-def getRadarDataClosestToTime(datetime, radar):
-    """
-
-    Args:
-        datetime:
-        radar:
-
-    Returns:
-
-    """
-    None
-
-
 def downloadDataFromBucket(bucket, fileName):
     """ Download a single NEXRAD radar datum.
 
@@ -100,26 +87,29 @@ def downloadDataFromBucket(bucket, fileName):
     return localfile
 
 
-def getFileNameCloseToDatetime(bucket, radar, roost_date):
-    """
+def getFileNameCloseToDatetime(files, radar, roost_date):
+    """Get the filename and index of the AWS file closes to datetime.
+
+    Given a list of files with AWS data, a radar, and a roost_date, find the
+    file in the list closest to the roost date. When going from Mosaic data
+    to AWS date our roost time may be few seconds or a few minutes off since
+    not all radars scans have the same date. This method will allow us to ignore
+    small time differences between two times.
 
     Args:
-        bucket:
-        radar:
-        roost_date:
+        files: A list of AWS radar file names.
+        radar: The 4 letter name of the radar, a string.
+        roost_date: A datetime object, the timestamp we are looking for in the
+            file list.
 
     Returns:
-
+        string, integer. A single AWSFile name, as well as the index where it
+        was found.
     """
-    bucketName = getBucketName(year=roost_date.year,
-                               month=roost_date.month,
-                               day=roost_date.day,
-                               radar=radar)
-
-    files = getFileNamesFromBucket(bucket, bucketName)
     min_dif = datetime.timedelta.max
     AWSFile = None
-    for f in files:
+    i = 0
+    for index, f in enumerate(files):
         base_f = os.path.basename(f)
 
         if base_f[0:4] == radar and base_f[13:15] > '08' and base_f[
@@ -131,10 +121,11 @@ def getFileNameCloseToDatetime(bucket, radar, roost_date):
             if (min_dif > dif):
                 min_dif = dif
                 AWSFile = f
+                i = index
             else:
                 break
 
-    return AWSFile
+    return AWSFile, i
 
 
 def main():
