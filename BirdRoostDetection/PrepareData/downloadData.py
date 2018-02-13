@@ -67,7 +67,7 @@ def downloadRadarsFromList(fileNames, saveDir, error_file_name):
 def main():
     """Formatted to run either locally or on schooner. Read in csv and get radar
      files listed in 'AWS_file' column"""
-    savepath = 'radardata/'
+    savepath = 'radarfiles/'
     radar = sys.argv[1]
     csvpath = sys.argv[2]
     working_dir = sys.argv[3]
