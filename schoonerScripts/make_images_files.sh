@@ -8,7 +8,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH -p swat_plus
 #SBATCH --mem=16G
-#SBATCH -t 12:00:00
+#SBATCH -t 6:00:00
 #SBATCH -D /home/cchilson/schoonerJobs/download_data
 #SBATCH --array=0-80
 
@@ -22,7 +22,7 @@ RADAR=${RADARS[$SLURM_ARRAY_TASK_ID]}
 echo $SLURM_ARRAY_TASK_ID
 
 python /home/cchilson/gitRepositories/BirdRoostDetection/BirdRoostDetection\
-/PrepareData/downloadData.py \
+/PrepareData/CreateImagesFromData.py \
 $RADAR \
 ml_labels.csv \
 /condo/swatwork/cchilson/OBS_research
