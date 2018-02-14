@@ -77,7 +77,7 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
                          '',
                          'North-South distance from radar (km)' if plotno == 1
                          else ''))
-        radius = 250
+        radius = 300
         display.set_limits((-radius, radius), (-radius, radius), ax=ax)
 
         display.set_aspect_ratio('equal', ax=ax)

@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-#SBATCH --job-name=download
+#SBATCH --job-name=images
 #SBATCH --ntasks=1
 #SBATCH -o log.out
 #SBATCH -e log.err
@@ -23,7 +23,7 @@ echo $SLURM_ARRAY_TASK_ID
 
 python /home/cchilson/gitRepositories/BirdRoostDetection/BirdRoostDetection\
 /PrepareData/downloadData.py \
-${RADAR} \
+$RADAR \
 ml_labels.csv \
 /condo/swatwork/cchilson/OBS_research
 
