@@ -85,9 +85,10 @@ def main():
     os.chdir(working_dir)
     labels = pandas.read_csv(filepath_or_buffer=csvpath,
                              skip_blank_lines=True)
+
     radar_labels = labels[labels.radar == radar]
-    roost_labels = labels[radar_labels.Roost]
-    noroost_labels = labels[radar_labels.Roost == False]
+    roost_labels = radar_labels[radar_labels.Roost == True]
+    noroost_labels = radar_labels[radar_labels.Roost == False]
 
     createLabelForFiles(fileNames=list(roost_labels['AWS_file']),
                         saveDir=os.path.join(savepath, 'Roost'))
