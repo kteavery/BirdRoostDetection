@@ -21,7 +21,7 @@ RADAR=${RADARS[$SLURM_ARRAY_TASK_ID]}
 echo $SLURM_ARRAY_TASK_ID
 
 python /home/cchilson/gitRepositories/BirdRoostDetection/BirdRoostDetection\
-/PrepareData/CreateImagesFromData.py \
+/PrepareData/DownloadData.py \
 $RADAR \
 ml_labels.csv \
 /condo/swatwork/cchilson/OBS_research
