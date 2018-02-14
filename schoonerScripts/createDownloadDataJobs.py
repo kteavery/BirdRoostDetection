@@ -34,7 +34,7 @@ set echo
 
 date
 python /home/cchilson/gitRepositories/BirdRoostDetection/BirdRoostDetection\
-/PrepareData/downloadData.py \
+/PrepareData/DownloadData.py \
 {0} \
 ml_labels.csv \
 /condo/swatwork/cchilson/OBS_research
