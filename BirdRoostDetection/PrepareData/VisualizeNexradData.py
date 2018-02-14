@@ -21,7 +21,6 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         save:
         dualPolarization:
     """
-    # TODO : create docstring
     display = pyart.graph.RadarDisplay(radar)
     if (dualPolarization):
         fig = plt.figure(figsize=(9, 9))
