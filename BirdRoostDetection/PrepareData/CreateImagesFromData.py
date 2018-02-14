@@ -18,61 +18,65 @@ def createLabelForFiles(fileNames, saveDir):
     #TODO write doc string
     radarFilePath = 'radarfiles/'
     for f in fileNames:
-        root = os.path.join(radarFilePath, getBasePath(f))
-        name = f.replace('.gz', '')
-        print root, name
+        try:
+            root = os.path.join(radarFilePath, getBasePath(f))
+            name = f.replace('.gz', '')
+            imgPath = os.path.join(saveDir, getBasePath(f), name + '.png')
 
-        file = open(os.path.join(root, name), 'r')
-        imgDir = os.path.join(saveDir, getBasePath(f))
-        imgPath = os.path.join(saveDir, getBasePath(f), name + '.png')
-        if not os.path.exists(imgDir):
-            os.makedirs(imgDir)
+            if not os.path.isfile(imgPath) :
+                file = open(os.path.join(root, name), 'r')
+                imgDir = os.path.join(saveDir, getBasePath(f))
 
-        rad = pyart.io.read_nexrad_archive(file.name)
+                if not os.path.exists(imgDir):
+                    os.makedirs(imgDir)
 
-        dualPol = int(name[-1:]) >= 6
-        VisualizeNexradData.visualizeLDMdata(rad, imgPath, dualPol)
-        file.close()
+                rad = pyart.io.read_nexrad_archive(file.name)
 
-        d1 = imgDir.replace('Roost', 'Roost_Reflectivity')
-        d2 = imgDir.replace('Roost', 'Roost_Velocity')
-        if dualPol:
-            d3 = imgDir.replace('Roost', 'Roost_Zdr')
-            d4 = imgDir.replace('Roost', 'Roost_Rho_HV')
+                dualPol = int(name[-1:]) >= 6
+                VisualizeNexradData.visualizeLDMdata(rad, imgPath, dualPol)
+                file.close()
 
-        if not os.path.exists(d1):
-            os.makedirs(d1)
-        if not os.path.exists(d2):
-            os.makedirs(d2)
-        if dualPol:
-            if not os.path.exists(d3):
-                os.makedirs(d3)
-            if not os.path.exists(d4):
-                os.makedirs(d4)
+                d1 = imgDir.replace('Roost', 'Roost_Reflectivity')
+                d2 = imgDir.replace('Roost', 'Roost_Velocity')
+                if dualPol:
+                    d3 = imgDir.replace('Roost', 'Roost_Zdr')
+                    d4 = imgDir.replace('Roost', 'Roost_Rho_HV')
 
-        img = Image.open(imgPath)
-        save_extension = '.png'
-        if (not dualPol):
-            img1 = img.crop((115, 100, 365, 350))
-            img1.save(d1 + name + '_Reflectivity' + save_extension)
+                if not os.path.exists(d1):
+                    os.makedirs(d1)
+                if not os.path.exists(d2):
+                    os.makedirs(d2)
+                if dualPol:
+                    if not os.path.exists(d3):
+                        os.makedirs(d3)
+                    if not os.path.exists(d4):
+                        os.makedirs(d4)
 
-            img2 = img.crop((495, 100, 740, 350))
-            img2.save(d2 + name + '_Velocity' + save_extension)
+                img = Image.open(imgPath)
+                save_extension = '.png'
+                if (not dualPol):
+                    img1 = img.crop((115, 100, 365, 350))
+                    img1.save(d1 + name + '_Reflectivity' + save_extension)
 
-        if (dualPol):
-            img1 = img.crop((115, 140, 365, 390))
-            img1.save(d1 + name + '_Reflectivity' + save_extension)
+                    img2 = img.crop((495, 100, 740, 350))
+                    img2.save(d2 + name + '_Velocity' + save_extension)
 
-            img2 = img.crop((495, 140, 740, 390))
-            img2.save(d2 + name + '_Velocity' + save_extension)
+                if (dualPol):
+                    img1 = img.crop((115, 140, 365, 390))
+                    img1.save(d1 + name + '_Reflectivity' + save_extension)
 
-            img3 = img.crop((115, 520, 365, 770))
-            img3.save(d3 + name + '_Zdr' + save_extension)
+                    img2 = img.crop((495, 140, 740, 390))
+                    img2.save(d2 + name + '_Velocity' + save_extension)
 
-            img4 = img.crop((495, 520, 740, 770))
-            img4.save(d4 + name + '_Rho_HV' + save_extension)
+                    img3 = img.crop((115, 520, 365, 770))
+                    img3.save(d3 + name + '_Zdr' + save_extension)
 
-        print root + '/' + name
+                    img4 = img.crop((495, 520, 740, 770))
+                    img4.save(d4 + name + '_Rho_HV' + save_extension)
+
+                #print root + '/' + name
+        except Exception as e:
+            print '{}, {}'.format(imgPath, str(e))
 
 
 def main():
