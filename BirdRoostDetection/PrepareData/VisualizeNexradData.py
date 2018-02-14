@@ -1,23 +1,26 @@
-# TODO : cleanup file and method headers
 import matplotlib
-
-# matplotlib.use('agg')  # Required for running on schooner
+matplotlib.use('agg')  # Required for running on schooner
 import matplotlib.pyplot as plt
 import pyart.graph
 import pyart.io
-from BirdRoostDetection.PrepareData import AWSNexradData
-import os
 
 
-# This method takes code from the following website, originally written by Lak,
-# modified by Carmen
-# https://eng.climate.com/2015/10/27/how-to-read-and-display-nexrad-on-aws
-# -using-python/
-#
-# visualize the LDM2 radar data
-# If image is from before 2012, make sure dualPolarization is set to false,
-# seince images before this time have fewer fields
+
 def visualizeLDMdata(radar, save, dualPolarization=False):
+    """Visualize the LDM2 radar data. Either display or save resulting image.
+
+    This method was modified from code found at the following website :
+    https://eng.climate.com/2015/10/27/how-to-read-and-display-nexrad-on-aws
+    -using-python/. If the image is dual polarization it will save out
+    reflectivity and velocity, otherwise it will also save differential
+    reflectivity and correlation coefficient. These later radar products
+    are only available in the dual polarization radar upgrades from 2012-2013.
+
+    Args:
+        radar:
+        save:
+        dualPolarization:
+    """
     # TODO : create docstring
     display = pyart.graph.RadarDisplay(radar)
     if (dualPolarization):
@@ -27,9 +30,6 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
     # display the lowest elevation scan data
     plots = []
     plots.append(['reflectivity', 'Reflectivity_0 (dBZ)', 0])
-    # plots.append(['reflectivity', 'Reflectivity_1 (dBZ)', 2])
-    # plots.append(['reflectivity', 'Reflectivity_2 (dBZ)', 4])
-    # plots.append(['reflectivity', 'Reflectivity_3 (dBZ)', 8])
     plots.append(['velocity', 'Velocity (m/s)', 1])
     if (dualPolarization):
         plots.append(['differential_reflectivity',
@@ -46,7 +46,6 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         cmap = None
         vmin = None
         vmax = None
-        # TODO : find better ranges supported by the literature
         if (plot[0] == 'reflectivity'):
             vmin = -20
             vmax = 30
@@ -86,45 +85,16 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
                                  ax=ax)
     if save:
         plt.savefig(save)
-        # Image.open(save).save(save[0:len(save) - 4] + '.jpg', 'JPEG')
         plt.close()
     else:
         plt.show()
 
 
 def main():
-    """Example of how to use methods of this class."""
-    conn = AWSNexradData.ConnectToAWS()
-    bucket = AWSNexradData.GetNexradBucket(conn)
-
-    bucketName = AWSNexradData.getBucketName(2017, 9, 06, 'KLIX')
-
-    # Get list of all files from bucket
-    fileNames = AWSNexradData.getFileNamesFromBucket(bucket, bucketName)
-    # print fileNames
-
-    # fullname = '2015/07/04/KMOB/KMOB20150704_111944_V06.gz' # Martin Roost
-    # fullname = '2015/07/02/KMOB/KMOB20150702_112749_V06.gz' # Weather
-    fullname = '2017/09/06/KLIX/KLIX20170906_112431_V06'
-    file = AWSNexradData.downloadDataFromBucket(bucket, fullname)
-    radar = pyart.io.read_nexrad_archive(file.name)
-
-    # visualizeLDMdata(radar, False, True)
-
-    # TODO clean up or delete commented out code
-
-    for i, file in enumerate(fileNames):
-        if os.path.basename(fullname)[0:17] in file:
-            print i, fullname
-            file_index = i
-            print file_index
-
-    for i in range(file_index - 3, file_index + 7):
-        file = AWSNexradData.downloadDataFromBucket(bucket, fileNames[i])
-        radar = pyart.io.read_nexrad_archive(file.name)
-        visualizeLDMdata(radar, 'TestImg_{}.png'.format(i), False)
-
-    conn.close()
+    fullPath = '/home/carmen/PycharmProjects/BirdRoostDetection/MLData/radarfiles/KLIX/2009/07/05/KLIX20090705_111005_V03'
+    file = open(fullPath, 'r')
+    rad = pyart.io.read_nexrad_archive(file.name)
+    visualizeLDMdata(rad, False, False)
 
 
 if __name__ == "__main__":
