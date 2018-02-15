@@ -1,3 +1,19 @@
+"""Download all nexrad radar images listed in ml labels spreadsheet.
+
+Input file must be formatted in the same way as MLData/ml_labels_example.csv
+
+In order to parallelize the process of downloading the data, we run files from
+each radar separately. For our research we had 81 radars and ran this file 81
+times in parallel on schooner (OU super computer)
+
+Example command:
+python /home/cchilson/gitRepositories/BirdRoostDetection/BirdRoostDetection\
+/PrepareData/DownloadData.py \
+KLIX \
+ml_labels_example.csv \
+/home/cchilson/OBS_research/Data
+"""
+
 import os
 import shutil
 import sys

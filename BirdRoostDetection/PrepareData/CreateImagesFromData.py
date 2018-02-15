@@ -1,3 +1,16 @@
+"""Once all NEXRAD radar images have been downloaded, convert them to images.
+
+In order to parallelize the process of making images of the data, we run files
+from each radar separately. For our research we had 81 radars and ran this file
+81 times in parallel on schooner (OU super computer)
+
+Example command:
+python /home/cchilson/gitRepositories/BirdRoostDetection/BirdRoostDetection\
+/PrepareData/CreateImagesFromData.py \
+KLIX \
+ml_labels_example.csv \
+/home/cchilson/OBS_research/Data
+"""
 from BirdRoostDetection.PrepareData import VisualizeNexradData
 import os
 import sys
@@ -7,15 +20,35 @@ import pandas
 
 
 def getBasePath(radarFileName):
-    """Given an AWS radar file, return radar/year/month/day.
-    TODO: finish docstring
+    """Given a single Nexrad radar file, create a path to save file at.
+
+    In order to avoid saving too many files in a single folder, we save radar
+    files and image in a path order using radar/year/month/day.
+
+    Args:
+        radarFileName: The name of the NEXRAD radar file.
+
+    Returns:
+        string path, RRRR/YYYY/MM/DD
     """
+    radarFileName = os.path.basename(radarFileName)
     return os.path.join(radarFileName[0:4], radarFileName[4:8],
                         radarFileName[8:10], radarFileName[10:12])
 
 
 def createLabelForFiles(fileNames, saveDir):
-    #TODO write doc string
+    """Given a Level 2 NEXRAD radar file, create images.
+
+    This is a slightly fast and lazy was of creating these images. There is
+    probably a better way to do this but this functions for my purposes
+    I use the PyArt library to save out the radar products, and then read in the
+    images and save out the 4 individual radar products.
+
+    Args:
+        fileNames: A list of filename paths, the location of the NEXRAD radar
+            files.
+        saveDir: The directory where the images will be saved in.
+    """
     radarFilePath = 'radarfiles/'
     for f in fileNames:
         try:
@@ -23,7 +56,7 @@ def createLabelForFiles(fileNames, saveDir):
             name = f.replace('.gz', '')
             imgPath = os.path.join(saveDir, getBasePath(f), name + '.png')
 
-            if not os.path.isfile(imgPath) :
+            if not os.path.isfile(imgPath):
                 file = open(os.path.join(root, name), 'r')
                 imgDir = os.path.join(saveDir, getBasePath(f))
 
@@ -74,14 +107,14 @@ def createLabelForFiles(fileNames, saveDir):
                     img4 = img.crop((495, 520, 740, 770))
                     img4.save(d4 + name + '_Rho_HV' + save_extension)
 
-                #print root + '/' + name
+                    # print root + '/' + name
         except Exception as e:
             print '{}, {}'.format(imgPath, str(e))
 
 
 def main():
     """Formatted to run either locally or on schooner. Read in csv and get radar
-     files listed in 'AWS_file' column"""
+     files listed in 'AWS_file' column. Save these files out as png images."""
     savepath = 'radarimages/'
     radar = sys.argv[1]
     working_dir = sys.argv[3]
