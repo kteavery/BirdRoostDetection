@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('agg')  # Required for running on schooner
+#matplotlib.use('agg')  # Required for running on schooner
 import matplotlib.pyplot as plt
 import pyart.graph
 import pyart.io
@@ -38,7 +38,6 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
     ncols = 2
     nrows = len(plots) / 2
     for plotno, plot in enumerate(plots, start=1):
-        mask_tuple = None
         if (dualPolarization):
             mask_tuple = ['cross_correlation_ratio', .975]
 
@@ -49,7 +48,6 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
             vmin = -20
             vmax = 30
         if (plot[0] == 'velocity'):
-            mask_tuple = None
             vmin = -20
             vmax = 20
             cmap = 'coolwarm'
@@ -67,7 +65,6 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
                      vmin=vmin,
                      vmax=vmax,
                      cmap=cmap,
-                     mask_tuple=mask_tuple,
                      colorbar_label='',
                      mask_outside=True,
                      axislabels=(
@@ -90,10 +87,10 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
 
 
 def main():
-    fullPath = '/home/carmen/PycharmProjects/BirdRoostDetection/MLData/radarfiles/KLIX/2009/07/05/KLIX20090705_111005_V03'
+    fullPath = '/home/carmen/PycharmProjects/BirdRoostDetection/MLData/radarfiles/KDLH/2015/08/17/KDLH20150817_090730_V06'
     file = open(fullPath, 'r')
     rad = pyart.io.read_nexrad_archive(file.name)
-    visualizeLDMdata(rad, False, False)
+    visualizeLDMdata(rad, False, True)
 
 
 if __name__ == "__main__":
