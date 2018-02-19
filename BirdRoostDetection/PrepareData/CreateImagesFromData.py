@@ -54,14 +54,16 @@ def createLabelForFiles(fileNames, saveDir):
         try:
             root = os.path.join(radarFilePath, getBasePath(f))
             name = f.replace('.gz', '')
-            imgPath = os.path.join(saveDir, getBasePath(f), name + '.png')
+            imgDir = os.path.join(saveDir, getBasePath(f)) + '/'
+            imgPath = os.path.join(
+                imgDir.replace(saveDir, os.path.join(saveDir, 'All/')),
+                name + '.png')
+            print imgPath
 
             if not os.path.isfile(imgPath):
                 file = open(os.path.join(root, name), 'r')
-                imgDir = os.path.join(saveDir, getBasePath(f))
-
-                if not os.path.exists(imgDir):
-                    os.makedirs(imgDir)
+                if not os.path.exists(os.path.dirname(imgPath)):
+                    os.makedirs(os.path.dirname(imgPath))
 
                 rad = pyart.io.read_nexrad_archive(file.name)
 
@@ -69,11 +71,11 @@ def createLabelForFiles(fileNames, saveDir):
                 VisualizeNexradData.visualizeLDMdata(rad, imgPath, dualPol)
                 file.close()
 
-                d1 = imgDir.replace('Roost', 'Roost_Reflectivity')
-                d2 = imgDir.replace('Roost', 'Roost_Velocity')
+                d1 = imgDir.replace(saveDir, os.path.join(saveDir, 'Reflectivity/'))
+                d2 = imgDir.replace(saveDir, os.path.join(saveDir, 'Velocity/'))
                 if dualPol:
-                    d3 = imgDir.replace('Roost', 'Roost_Zdr')
-                    d4 = imgDir.replace('Roost', 'Roost_Rho_HV')
+                    d3 = imgDir.replace(saveDir, os.path.join(saveDir, 'Zdr/'))
+                    d4 = imgDir.replace(saveDir, os.path.join(saveDir, 'Rho_HV/'))
 
                 if not os.path.exists(d1):
                     os.makedirs(d1)
@@ -124,13 +126,11 @@ def main():
                              skip_blank_lines=True)
 
     radar_labels = labels[labels.radar == radar]
-    roost_labels = radar_labels[radar_labels.Roost == True]
-    noroost_labels = radar_labels[radar_labels.Roost == False]
+    # roost_labels = radar_labels[radar_labels.Roost == True]
+    # noroost_labels = radar_labels[radar_labels.Roost == False]
 
-    createLabelForFiles(fileNames=list(roost_labels['AWS_file']),
-                        saveDir=os.path.join(savepath, 'Roost'))
-    createLabelForFiles(fileNames=list(noroost_labels['AWS_file']),
-                        saveDir=os.path.join(savepath, 'NoRoost'))
+    createLabelForFiles(fileNames=list(radar_labels['AWS_file']),
+                        saveDir=savepath)
 
 
 if __name__ == "__main__":

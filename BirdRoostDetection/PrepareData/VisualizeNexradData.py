@@ -1,5 +1,5 @@
 import matplotlib
-#matplotlib.use('agg')  # Required for running on schooner
+matplotlib.use('agg')  # Required for running on schooner
 import matplotlib.pyplot as plt
 import pyart.graph
 import pyart.io
