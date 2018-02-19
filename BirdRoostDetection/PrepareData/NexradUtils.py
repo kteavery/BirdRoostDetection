@@ -113,6 +113,7 @@ def getTimeStampFromFilename(filename):
                                             '%Y%m%d_%H%M%S')
     return radar_date
 
+
 def getRadarFromFilename(filename):
     """Get the radar name from the AWS filename.
 
@@ -125,6 +126,24 @@ def getRadarFromFilename(filename):
     base_f = os.path.basename(filename)
     radar = base_f[0:4]
     return radar
+
+
+def getBasePath(radarFileName):
+    """Given a single Nexrad radar file, create a path to save file at.
+
+    In order to avoid saving too many files in a single folder, we save radar
+    files and image in a path order using radar/year/month/day.
+
+    Args:
+        radarFileName: The name of the NEXRAD radar file.
+
+    Returns:
+        string path, RRRR/YYYY/MM/DD
+    """
+    radarFileName = os.path.basename(radarFileName)
+    return os.path.join(radarFileName[0:4], radarFileName[4:8],
+                        radarFileName[8:10], radarFileName[10:12])
+
 
 def main():
     """Example of how to use methods of this class."""

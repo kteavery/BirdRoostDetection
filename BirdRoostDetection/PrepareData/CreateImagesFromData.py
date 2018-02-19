@@ -12,28 +12,12 @@ ml_labels_example.csv \
 /home/cchilson/OBS_research/Data
 """
 from BirdRoostDetection.PrepareData import VisualizeNexradData
+from BirdRoostDetection.PrepareData import NexradUtils
 import os
 import sys
 import pyart.io
 from PIL import Image
 import pandas
-
-
-def getBasePath(radarFileName):
-    """Given a single Nexrad radar file, create a path to save file at.
-
-    In order to avoid saving too many files in a single folder, we save radar
-    files and image in a path order using radar/year/month/day.
-
-    Args:
-        radarFileName: The name of the NEXRAD radar file.
-
-    Returns:
-        string path, RRRR/YYYY/MM/DD
-    """
-    radarFileName = os.path.basename(radarFileName)
-    return os.path.join(radarFileName[0:4], radarFileName[4:8],
-                        radarFileName[8:10], radarFileName[10:12])
 
 
 def createLabelForFiles(fileNames, saveDir):
@@ -52,9 +36,9 @@ def createLabelForFiles(fileNames, saveDir):
     radarFilePath = 'radarfiles/'
     for f in fileNames:
         try:
-            root = os.path.join(radarFilePath, getBasePath(f))
+            root = os.path.join(radarFilePath, NexradUtils.getBasePath(f))
             name = f.replace('.gz', '')
-            imgDir = os.path.join(saveDir, getBasePath(f)) + '/'
+            imgDir = os.path.join(saveDir, NexradUtils.getBasePath(f)) + '/'
             imgPath = os.path.join(
                 imgDir.replace(saveDir, os.path.join(saveDir, 'All/')),
                 name + '.png')
@@ -71,11 +55,13 @@ def createLabelForFiles(fileNames, saveDir):
                 VisualizeNexradData.visualizeLDMdata(rad, imgPath, dualPol)
                 file.close()
 
-                d1 = imgDir.replace(saveDir, os.path.join(saveDir, 'Reflectivity/'))
+                d1 = imgDir.replace(saveDir,
+                                    os.path.join(saveDir, 'Reflectivity/'))
                 d2 = imgDir.replace(saveDir, os.path.join(saveDir, 'Velocity/'))
                 if dualPol:
                     d3 = imgDir.replace(saveDir, os.path.join(saveDir, 'Zdr/'))
-                    d4 = imgDir.replace(saveDir, os.path.join(saveDir, 'Rho_HV/'))
+                    d4 = imgDir.replace(saveDir,
+                                        os.path.join(saveDir, 'Rho_HV/'))
 
                 if not os.path.exists(d1):
                     os.makedirs(d1)
