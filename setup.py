@@ -14,7 +14,8 @@ if __name__ == '__main__':
         url='https://github.com/carmenchilson/BirdRoostDetection',
         packages=[
             'BirdRoostDetection',
-            # 'BirdRoostDetection.BuildModels',
+            'BirdRoostDetection.BuildModels',
+            'BirdRoostDetection.BuildModels.ShallowCNN'
             'BirdRoostDetection.PrepareData'
         ],
         keywords=[

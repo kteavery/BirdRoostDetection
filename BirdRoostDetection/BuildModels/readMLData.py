@@ -2,12 +2,29 @@ import os
 import pandas
 import datetime
 from BirdRoostDetection.PrepareData import NexradUtils
+import numpy as np
+from enum import Enum
+from PIL import Image
 
 RADAR_FILE_DIR = 'radarfiles/'
 RADAR_IMAGE_DIR = 'radarimages/'
-VALIDATION = 'validation'
-TRAINING = 'training'
-TESTING = 'testing'
+
+
+class ML_Set(Enum):
+    """Machine learning set enum, includes validation, train, and test."""
+    validation = 1
+    training = 2
+    testing = 3
+
+
+class Radar_Products(Enum):
+    """Radar Product enum, includes reflectivity, velocity, rho_hv, and zdr."""
+    reflectivity = 1
+    velocity = 2
+    rho_hv = 3
+    zdr = 4
+
+
 ZDR = 'Zdr'
 RHO_HV = 'Rho_HV'
 VELOCITY = 'Velocity'
@@ -44,10 +61,8 @@ class ML_Label():
         self.longitude: The longitude of the roost in the radar file
         self.timestamp: The radius of the roost in the radar file
         self.sunrise_time: The sunrise time at the lat, lon coordinates
-        self.reflectivity_path: The path to the reflectivity radar image
-        self.velocity_path: The path to the velocity radar image
-        self.rho_hv_path: The path to the rho_hv radar image
-        self.zdr_path: The path to the zdr radar image
+        self.image_paths: A dictionary that contains path to the images with the
+            following radar products : reflectivity, velocity, rho_hv, zdr
     """
 
     def __init__(self, pd_row, root_dir):
@@ -68,14 +83,22 @@ class ML_Label():
                                                     '%Y-%m-%d %H:%M:%S')
         self.sunrise_time = datetime.datetime.strptime(pd_row['sunrise_time'],
                                                        '%Y-%m-%d %H:%M:%S')
+        self.image_paths = {}
+        self.image_paths[
+            Radar_Products.reflectivity] = self.__get_radar_product_path(
+            root_dir, REFLECTIVITY)
+        self.image_paths[
+            Radar_Products.velocity] = self.__get_radar_product_path(
+            root_dir, VELOCITY)
+        self.image_paths[Radar_Products.rho_hv] = self.__get_radar_product_path(
+            root_dir, RHO_HV)
+        self.image_paths[Radar_Products.zdr] = self.__get_radar_product_path(
+            root_dir, ZDR)
 
-        self.reflectivity_path = self._get_radar_product_path(root_dir,
-                                                              REFLECTIVITY)
-        self.velocity_path = self._get_radar_product_path(root_dir, VELOCITY)
-        self.rho_hv_path = self._get_radar_product_path(root_dir, RHO_HV)
-        self.zdr_path = self._get_radar_product_path(root_dir, ZDR)
+    def get_path(self, radar_product):
+        return self.image_paths[radar_product]
 
-    def _get_radar_product_path(self, root_dir, radar_product):
+    def __get_radar_product_path(self, root_dir, radar_product):
         return os.path.join(root_dir, '{1}/',
                             NexradUtils.getBasePath(self.fileName),
                             '{0}_{1}.png').format(self.fileName, radar_product)
@@ -86,9 +109,8 @@ class Batch_Generator():
 
     Class Variables:
         self.root_dir: The directory where the radar images are stored
-        self.train: A list of files that are part of the train set
-        self.validation: A list of files that are part of the validation set
-        self.test: A list of files that are part of the test set
+        self.ml_sets: A dictionary containing a list of files that are part of
+            the given ml set
         self.batch_size: the size of the minibatch learning batches
         self.label_dict: A dictionary of the labels, the key is the filename,
         and the value is a ML_Label object.
@@ -103,19 +125,19 @@ class Batch_Generator():
                  root_dir=RADAR_IMAGE_DIR):
         self.label_dict = {}
         self.root_dir = root_dir
-        self._setTrainTestValidation(ml_split_csv,
-                                     validate_k_index,
-                                     test_k_index)
+        self.__setTrainTestValidation(ml_split_csv,
+                                      validate_k_index,
+                                      test_k_index)
 
         ml_label_pd = pandas.read_csv(ml_label_csv)
         for index, row in ml_label_pd.iterrows():
             self.label_dict[row['AWS_file']] = ML_Label(row, self.root_dir)
         self.batch_size = default_batch_size
 
-    def _setTrainTestValidation(self,
-                                ml_split_csv,
-                                validate_k_index,
-                                test_k_index):
+    def __setTrainTestValidation(self,
+                                 ml_split_csv,
+                                 validate_k_index,
+                                 test_k_index):
         """Create Train, test, and Validation set from k data folds.
 
         The k data folds are saved out to ml_split_csv. The fold at the given
@@ -144,13 +166,60 @@ class Batch_Generator():
 
         # Sort into train, test, and validation sets
         no_val_pd = ml_split_pd[ml_split_pd.split_index != validate_k_index]
-        self.train = list(
+        self.ml_sets = {}
+        self.ml_sets[ML_Set.training] = list(
             no_val_pd[no_val_pd.split_index != test_k_index]['AWS_file'])
-        self.validation = list(
+        self.ml_sets[ML_Set.validation] = list(
             ml_split_pd[ml_split_pd.split_index == validate_k_index][
                 'AWS_file'])
-        self.test = list(
+        self.ml_sets[ML_Set.testing] = list(
             ml_split_pd[ml_split_pd.split_index == test_k_index]['AWS_file'])
-        print len(self.train)
-        print len(self.validation)
-        print len(self.test)
+
+        # Shuffle the data
+        np.random.shuffle(self.ml_sets[ML_Set.training])
+        np.random.shuffle(self.ml_sets[ML_Set.validation])
+        np.random.shuffle(self.ml_sets[ML_Set.testing])
+
+    def get_batch(self, ml_set, radar_product):
+        """Get a batch of data for machine learning.
+
+        Args:
+            ml_set: ML_Set enum value, train, test, or validation.
+            radar_product: Radar_Product enum value, reflectivity, velocity,
+                zdr, or rho_hv.
+
+        Returns:
+            ground_truth, train_data:
+                The ground truth is an array of batch size, where each item
+                in the array contains a single ground truth label.
+                The train_data is an array of images, corresponding to the
+                ground truth values.
+        """
+        indices = np.random.randint(low=0,
+                                    high=len(self.ml_sets[ml_set]),
+                                    size=self.batch_size)
+        ground_truths = []
+        train_data = []
+        for index in indices:
+            filename = self.ml_sets[ml_set][index]
+            is_roost = int(self.label_dict[filename].is_roost)
+            image_path = self.label_dict[filename].get_path(radar_product)
+            ground_truths.append([is_roost, 1 - is_roost])
+            train_data.append(self.__load_image(image_path))
+        return np.array(ground_truths), self.__format_image_data(train_data)
+
+    def __format_image_data(self, train_data):
+        """Ensure that the batch of train data is properly shaped"""
+        return np.array(train_data)[:, 5:245, 5:245, :]
+
+    def __load_image(self, filename):
+        """Load image from filepath.
+
+        Args:
+            filename: The path to the image file.
+
+        Returns:
+            Image as numpy array.
+        """
+        img = Image.open(filename)
+        return np.array(img)
