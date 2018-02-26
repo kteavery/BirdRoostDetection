@@ -15,9 +15,10 @@ if __name__ == '__main__':
         packages=[
             'BirdRoostDetection',
             'BirdRoostDetection.BuildModels',
-            'BirdRoostDetection.BuildModels.ShallowCNN'
+            'BirdRoostDetection.BuildModels.ShallowCNN',
             'BirdRoostDetection.PrepareData'
         ],
+        package_data={'BirdRoostDetection': ['settings.json']},
         keywords=[
             'Machine Learning',
             'Biology',
