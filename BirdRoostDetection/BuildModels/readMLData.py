@@ -125,19 +125,19 @@ class Batch_Generator():
                  root_dir=RADAR_IMAGE_DIR):
         self.label_dict = {}
         self.root_dir = root_dir
-        self.__setTrainTestValidation(ml_split_csv,
-                                      validate_k_index,
-                                      test_k_index)
+        self.__set_ml_sets(ml_split_csv,
+                           validate_k_index,
+                           test_k_index)
 
         ml_label_pd = pandas.read_csv(ml_label_csv)
         for index, row in ml_label_pd.iterrows():
             self.label_dict[row['AWS_file']] = ML_Label(row, self.root_dir)
         self.batch_size = default_batch_size
 
-    def __setTrainTestValidation(self,
-                                 ml_split_csv,
-                                 validate_k_index,
-                                 test_k_index):
+    def __set_ml_sets(self,
+                      ml_split_csv,
+                      validate_k_index,
+                      test_k_index):
         """Create Train, test, and Validation set from k data folds.
 
         The k data folds are saved out to ml_split_csv. The fold at the given
@@ -165,20 +165,29 @@ class Batch_Generator():
                 ml_split_pd.drop(index, inplace=True)
 
         # Sort into train, test, and validation sets
-        no_val_pd = ml_split_pd[ml_split_pd.split_index != validate_k_index]
-        self.ml_sets = {}
-        self.ml_sets[ML_Set.training] = list(
-            no_val_pd[no_val_pd.split_index != test_k_index]['AWS_file'])
-        self.ml_sets[ML_Set.validation] = list(
-            ml_split_pd[ml_split_pd.split_index == validate_k_index][
+        self.no_roost_sets = {}
+        self.__set_ml_sets_helper(self.no_roost_sets,
+                                  ml_split_pd[ml_split_pd.Roost != True],
+                                  validate_k_index, test_k_index)
+        self.roost_sets = {}
+        self.__set_ml_sets_helper(self.roost_sets,
+                                  ml_split_pd[ml_split_pd.Roost],
+                                  validate_k_index, test_k_index)
+
+    def __set_ml_sets_helper(self, ml_sets, ml_split_pd, val_k, test_k):
+        no_val_pd = ml_split_pd[ml_split_pd.split_index != val_k]
+        ml_sets[ML_Set.training] = list(
+            no_val_pd[no_val_pd.split_index != test_k]['AWS_file'])
+        ml_sets[ML_Set.validation] = list(
+            ml_split_pd[ml_split_pd.split_index == val_k][
                 'AWS_file'])
-        self.ml_sets[ML_Set.testing] = list(
-            ml_split_pd[ml_split_pd.split_index == test_k_index]['AWS_file'])
+        ml_sets[ML_Set.testing] = list(
+            ml_split_pd[ml_split_pd.split_index == test_k]['AWS_file'])
 
         # Shuffle the data
-        np.random.shuffle(self.ml_sets[ML_Set.training])
-        np.random.shuffle(self.ml_sets[ML_Set.validation])
-        np.random.shuffle(self.ml_sets[ML_Set.testing])
+        np.random.shuffle(ml_sets[ML_Set.training])
+        np.random.shuffle(ml_sets[ML_Set.validation])
+        np.random.shuffle(ml_sets[ML_Set.testing])
 
     def get_batch(self, ml_set, radar_product):
         """Get a batch of data for machine learning.
@@ -189,28 +198,29 @@ class Batch_Generator():
                 zdr, or rho_hv.
 
         Returns:
-            ground_truth, train_data:
+            train_data, ground_truth:
                 The ground truth is an array of batch size, where each item
                 in the array contains a single ground truth label.
                 The train_data is an array of images, corresponding to the
                 ground truth values.
         """
-        indices = np.random.randint(low=0,
-                                    high=len(self.ml_sets[ml_set]),
-                                    size=self.batch_size)
         ground_truths = []
         train_data = []
-        for index in indices:
-            filename = self.ml_sets[ml_set][index]
-            is_roost = int(self.label_dict[filename].is_roost)
-            image_path = self.label_dict[filename].get_path(radar_product)
-            ground_truths.append([is_roost, 1 - is_roost])
-            train_data.append(self.__load_image(image_path))
-        return np.array(ground_truths), self.__format_image_data(train_data)
+        for ml_sets in [self.roost_sets, self.no_roost_sets]:
+            indices = np.random.randint(low=0,
+                                        high=len(ml_sets[ml_set]),
+                                        size=self.batch_size / 2)
+            for index in indices:
+                filename = ml_sets[ml_set][index]
+                is_roost = int(self.label_dict[filename].is_roost)
+                image_path = self.label_dict[filename].get_path(radar_product)
+                ground_truths.append([is_roost, 1 - is_roost])
+                train_data.append(self.__load_image(image_path))
+        return self.__format_image_data(train_data), np.array(ground_truths)
 
     def __format_image_data(self, train_data):
         """Ensure that the batch of train data is properly shaped"""
-        return np.array(train_data)[:, 5:245, 5:245, :]
+        return np.array(train_data)[:, 5:245, 5:245, 0:3]
 
     def __load_image(self, filename):
         """Load image from filepath.
@@ -223,3 +233,19 @@ class Batch_Generator():
         """
         img = Image.open(filename)
         return np.array(img)
+
+
+def main():
+    os.chdir('/home/carmen/PycharmProjects/BirdRoostDetection/MLData')
+    batch_generator = Batch_Generator(ml_label_csv='ml_labels.csv',
+                                      ml_split_csv='ml_splits.csv',
+                                      validate_k_index=3,
+                                      test_k_index=4)
+    x, y = batch_generator.get_batch(
+        ml_set=ML_Set.training,
+        radar_product=Radar_Products.reflectivity)
+    print y
+
+
+if __name__ == "__main__":
+    main()

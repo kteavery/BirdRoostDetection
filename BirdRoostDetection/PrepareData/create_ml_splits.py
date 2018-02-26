@@ -38,10 +38,13 @@ def ml_splits_by_date(csv_input_path,
 
     basenames = {}
     file_list = list(pd['AWS_file'])
+    is_roost_list = list(pd['Roost'])
+
+
     fold_images = [[] for split_index in range(k)]
 
     index = 0
-    for file_name in file_list:
+    for i, file_name in enumerate(file_list):
         basename = file_name[4:12]
         if basename not in basenames:
             basenames[basename] = index
@@ -51,12 +54,12 @@ def ml_splits_by_date(csv_input_path,
 
         for split_index in range(k):
             if hash == split_index:
-                fold_images[split_index].append(file_name)
+                fold_images[split_index].append([file_name, is_roost_list[i]])
 
     output = []
     for split_index in range(k):
         for file_name in fold_images[split_index]:
-            output.append({'split_index': split_index, 'AWS_file': file_name})
+            output.append({'split_index': split_index, 'AWS_file': file_name[0], 'Roost':file_name[1]})
     output_pd = pandas.DataFrame.from_dict(output)
     output_pd.to_csv(csv_output_path, index=False)
 
