@@ -5,6 +5,7 @@ from BirdRoostDetection.PrepareData import NexradUtils
 import numpy as np
 from enum import Enum
 from PIL import Image
+import BirdRoostDetection.LoadSettings as settings
 
 RADAR_FILE_DIR = 'radarfiles/'
 RADAR_IMAGE_DIR = 'radarimages/'
@@ -236,9 +237,9 @@ class Batch_Generator():
 
 
 def main():
-    os.chdir('/home/carmen/PycharmProjects/BirdRoostDetection/MLData')
-    batch_generator = Batch_Generator(ml_label_csv='ml_labels.csv',
-                                      ml_split_csv='ml_splits.csv',
+    os.chdir(settings.WORKING_DIRECTORY)
+    batch_generator = Batch_Generator(ml_label_csv=settings.LABEL_CSV,
+                                      ml_split_csv=settings.ML_SPLITS_DATA,
                                       validate_k_index=3,
                                       test_k_index=4)
     x, y = batch_generator.get_batch(

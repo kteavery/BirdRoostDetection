@@ -5,11 +5,7 @@ from each radar separately. For our research we had 81 radars and ran this file
 81 times in parallel on schooner (OU super computer)
 
 Example command:
-python /home/cchilson/gitRepositories/BirdRoostDetection/BirdRoostDetection\
-/PrepareData/CreateImagesFromData.py \
-KLIX \
-ml_labels_example.csv \
-/home/cchilson/OBS_research/Data
+python CreateImagesFromData.py KLIX
 """
 from BirdRoostDetection.PrepareData import VisualizeNexradData
 from BirdRoostDetection.PrepareData import NexradUtils
@@ -18,6 +14,7 @@ import sys
 import pyart.io
 from PIL import Image
 import pandas
+import BirdRoostDetection.LoadSettings as settings
 
 
 def createLabelForFiles(fileNames, saveDir):
@@ -105,16 +102,11 @@ def main():
      files listed in 'AWS_file' column. Save these files out as png images."""
     savepath = 'radarimages/'
     radar = sys.argv[1]
-    working_dir = sys.argv[3]
-    csvpath = sys.argv[2]
-    os.chdir(working_dir)
-    labels = pandas.read_csv(filepath_or_buffer=csvpath,
+    os.chdir(settings.WORKING_DIRECTORY)
+    labels = pandas.read_csv(filepath_or_buffer=settings.LABEL_CSV,
                              skip_blank_lines=True)
 
     radar_labels = labels[labels.radar == radar]
-    # roost_labels = radar_labels[radar_labels.Roost == True]
-    # noroost_labels = radar_labels[radar_labels.Roost == False]
-
     createLabelForFiles(fileNames=list(radar_labels['AWS_file']),
                         saveDir=savepath)
 

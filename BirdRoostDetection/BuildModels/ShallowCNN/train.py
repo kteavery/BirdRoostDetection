@@ -2,6 +2,7 @@ from BirdRoostDetection.BuildModels import readMLData
 from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
 from BirdRoostDetection.BuildModels import ml_utils
 from keras.callbacks import TensorBoard
+import BirdRoostDetection.LoadSettings as settings
 import os
 
 
@@ -48,11 +49,12 @@ def train(log_path, radar_field, save_file, batch_generator):
 
 
 def main():
-    os.chdir('/home/carmen/PycharmProjects/BirdRoostDetection/MLData')
-    batch_generator = readMLData.Batch_Generator(ml_label_csv='ml_labels.csv',
-                                                 ml_split_csv='ml_splits.csv',
-                                                 validate_k_index=3,
-                                                 test_k_index=4)
+    os.chdir(settings.WORKING_DIRECTORY)
+    batch_generator = readMLData.Batch_Generator(
+        ml_label_csv=settings.LABEL_CSV,
+        ml_split_csv=settings.ML_SPLITS_DATA,
+        validate_k_index=3,
+        test_k_index=4)
 
     train(log_path='model/reflectivity/',
           radar_field=readMLData.Radar_Products.reflectivity,

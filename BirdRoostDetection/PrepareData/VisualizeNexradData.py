@@ -1,9 +1,9 @@
 import matplotlib
+
 matplotlib.use('agg')  # Required for running on schooner
 import matplotlib.pyplot as plt
 import pyart.graph
 import pyart.io
-
 
 
 def visualizeLDMdata(radar, save, dualPolarization=False):
@@ -84,14 +84,3 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         plt.close()
     else:
         plt.show()
-
-
-def main():
-    fullPath = '/home/carmen/PycharmProjects/BirdRoostDetection/MLData/radarfiles/KDLH/2015/08/17/KDLH20150817_090730_V06'
-    file = open(fullPath, 'r')
-    rad = pyart.io.read_nexrad_archive(file.name)
-    visualizeLDMdata(rad, False, True)
-
-
-if __name__ == "__main__":
-    main()

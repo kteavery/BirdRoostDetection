@@ -1,16 +1,8 @@
-"""Read in csv and create train, test, and validation splits for ML.
-
-Example command:
-python create_ml_splits.py \
-ml_labels.csv \
-ml_splits.csv \
-/home/carmen/PycharmProjects/BirdRoostDetection/MLData/
-
-"""
+"""Read in csv and create train, test, and validation splits for ML."""
 
 import os
-import sys
 import pandas
+import BirdRoostDetection.LoadSettings as settings
 
 
 def ml_splits_by_date(csv_input_path,
@@ -40,7 +32,6 @@ def ml_splits_by_date(csv_input_path,
     file_list = list(pd['AWS_file'])
     is_roost_list = list(pd['Roost'])
 
-
     fold_images = [[] for split_index in range(k)]
 
     index = 0
@@ -59,18 +50,18 @@ def ml_splits_by_date(csv_input_path,
     output = []
     for split_index in range(k):
         for file_name in fold_images[split_index]:
-            output.append({'split_index': split_index, 'AWS_file': file_name[0], 'Roost':file_name[1]})
+            output.append({
+                'split_index': split_index,
+                'AWS_file': file_name[0], 'Roost': file_name[1]})
     output_pd = pandas.DataFrame.from_dict(output)
     output_pd.to_csv(csv_output_path, index=False)
 
 
 def main():
-    csv_input_path = sys.argv[1]
-    csv_output_path = sys.argv[2]
-    working_dir = sys.argv[3]
+    working_dir = settings.WORKING_DIRECTORY
     os.chdir(working_dir)
-    ml_splits_by_date(csv_input_path=csv_input_path,
-                      csv_output_path=csv_output_path,
+    ml_splits_by_date(csv_input_path=settings.LABEL_CSV,
+                      csv_output_path=settings.ML_SPLITS_DATA,
                       k=5)
 
 

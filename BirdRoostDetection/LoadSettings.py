@@ -11,8 +11,11 @@ Set file paths in the settings.json file.
 """
 
 import json
+import os
 
-data = json.load(open('settings.json'))
+real_path = os.path.realpath(__file__)
+setting_path = os.path.join(os.path.dirname(real_path), 'settings.json')
+data = json.load(open(setting_path))
 
 WORKING_DIRECTORY = str(data["cwd"])
 LABEL_CSV = str(data["label_csv"])

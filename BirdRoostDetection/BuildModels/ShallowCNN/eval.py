@@ -4,10 +4,11 @@ from BirdRoostDetection.BuildModels import readMLData
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
+import BirdRoostDetection.LoadSettings as settings
 
 
 def main():
-    os.chdir('/home/carmen/PycharmProjects/BirdRoostDetection/MLData')
+    os.chdir(settings.WORKING_DIRECTORY)
     model = ml_model.build_model((240, 240, 4))
     model.load_weights('model/reflectivity/checkpoint/reflectivity400.h5')
 

@@ -7,11 +7,7 @@ each radar separately. For our research we had 81 radars and ran this file 81
 times in parallel on schooner (OU super computer)
 
 Example command:
-python /home/cchilson/gitRepositories/BirdRoostDetection/BirdRoostDetection\
-/PrepareData/DownloadData.py \
-KLIX \
-ml_labels_example.csv \
-/home/cchilson/OBS_research/Data
+python DownloadData.py KLIX
 """
 
 import os
@@ -20,6 +16,7 @@ import sys
 import pandas
 from BirdRoostDetection.PrepareData import AWSNexradData
 from BirdRoostDetection.PrepareData import NexradUtils
+import BirdRoostDetection.LoadSettings as settings
 
 
 def downloadRadarsFromList(fileNames, saveDir, error_file_name):
@@ -85,10 +82,8 @@ def main():
      files listed in 'AWS_file' column"""
     savepath = 'radarfiles/'
     radar = sys.argv[1]
-    csvpath = sys.argv[2]
-    working_dir = sys.argv[3]
-    os.chdir(working_dir)
-    labels = pandas.read_csv(filepath_or_buffer=csvpath,
+    os.chdir(settings.WORKING_DIRECTORY)
+    labels = pandas.read_csv(filepath_or_buffer=settings.LABEL_CSV,
                              skip_blank_lines=True)
     radar_labels = labels[labels.radar == radar]
     fileNames = list(radar_labels['AWS_file'])
