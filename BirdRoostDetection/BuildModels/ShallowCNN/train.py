@@ -1,12 +1,28 @@
+"""
+
+"""
+from BirdRoostDetection import utils
 from BirdRoostDetection.BuildModels import readMLData
 from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
 from BirdRoostDetection.BuildModels import ml_utils
 from keras.callbacks import TensorBoard
 import BirdRoostDetection.LoadSettings as settings
 import os
+import sys
 
 
 def train(log_path, radar_field, save_file, batch_generator):
+    """Train the
+
+    Args:
+        log_path:
+        radar_field:
+        save_file:
+        batch_generator:
+
+    Returns:
+
+    """
     checkpoint_path = log_path + '/checkpoint/'
     if not os.path.exists(checkpoint_path):
         os.makedirs(os.path.dirname(checkpoint_path))
@@ -25,20 +41,21 @@ def train(log_path, radar_field, save_file, batch_generator):
 
     for batch_no in range(num_iterations):
         x, y = batch_generator.get_batch(
-            ml_set=readMLData.ML_Set.training,
+            ml_set=utils.ML_Set.training,
             radar_product=radar_field)
         train_logs = model.train_on_batch(x, y)
-        print progress_string.format('Train', batch_no,
+        print progress_string.format(utils.ML_Set.training.fullname, batch_no,
                                      train_logs[0], train_logs[1])
         ml_utils.write_log(callback, train_names, train_logs, batch_no)
         if (batch_no % eval_increment == 0):
             model.save_weights(save_file)
             x_, y_ = batch_generator.get_batch(
-                ml_set=readMLData.ML_Set.validation,
+                ml_set=utils.ML_Set.validation,
                 radar_product=radar_field)
             val_logs = model.test_on_batch(x_, y_)
             ml_utils.write_log(callback, val_names, val_logs, batch_no)
-            print progress_string.format('Validation', batch_no,
+            print progress_string.format(utils.ML_Set.validation.fullname,
+                                         batch_no,
                                          val_logs[0], val_logs[1])
 
         if (batch_no % 100 == 0 or batch_no == num_iterations - 1):
@@ -50,15 +67,16 @@ def train(log_path, radar_field, save_file, batch_generator):
 
 def main():
     os.chdir(settings.WORKING_DIRECTORY)
+    radar_product = utils.Radar_Products(int(sys.argv[1]))
     batch_generator = readMLData.Batch_Generator(
         ml_label_csv=settings.LABEL_CSV,
         ml_split_csv=settings.ML_SPLITS_DATA,
         validate_k_index=3,
         test_k_index=4)
 
-    train(log_path='model/reflectivity/',
-          radar_field=readMLData.Radar_Products.reflectivity,
-          save_file='reflectivity{}.h5',
+    train(log_path='model/{}/'.format(radar_product.fullname),
+          radar_field=radar_product,
+          save_file='{}{}.h5'.format(radar_product.fullname, '{}'),
           batch_generator=batch_generator)
 
 

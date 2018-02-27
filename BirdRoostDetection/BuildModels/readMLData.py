@@ -3,33 +3,9 @@ import pandas
 import datetime
 from BirdRoostDetection.PrepareData import NexradUtils
 import numpy as np
-from enum import Enum
 from PIL import Image
 import BirdRoostDetection.LoadSettings as settings
-
-RADAR_FILE_DIR = 'radarfiles/'
-RADAR_IMAGE_DIR = 'radarimages/'
-
-
-class ML_Set(Enum):
-    """Machine learning set enum, includes validation, train, and test."""
-    validation = 1
-    training = 2
-    testing = 3
-
-
-class Radar_Products(Enum):
-    """Radar Product enum, includes reflectivity, velocity, rho_hv, and zdr."""
-    reflectivity = 1
-    velocity = 2
-    rho_hv = 3
-    zdr = 4
-
-
-ZDR = 'Zdr'
-RHO_HV = 'Rho_HV'
-VELOCITY = 'Velocity'
-REFLECTIVITY = 'Reflectivity'
+from BirdRoostDetection import utils
 
 
 def getListOfFilesInDirectory(dir, fileType):
@@ -86,15 +62,17 @@ class ML_Label():
                                                        '%Y-%m-%d %H:%M:%S')
         self.image_paths = {}
         self.image_paths[
-            Radar_Products.reflectivity] = self.__get_radar_product_path(
-            root_dir, REFLECTIVITY)
+            utils.Radar_Products.reflectivity] = self.__get_radar_product_path(
+            root_dir, utils.Radar_Products.reflectivity.fullname)
         self.image_paths[
-            Radar_Products.velocity] = self.__get_radar_product_path(
-            root_dir, VELOCITY)
-        self.image_paths[Radar_Products.rho_hv] = self.__get_radar_product_path(
-            root_dir, RHO_HV)
-        self.image_paths[Radar_Products.zdr] = self.__get_radar_product_path(
-            root_dir, ZDR)
+            utils.Radar_Products.velocity] = self.__get_radar_product_path(
+            root_dir, utils.Radar_Products.velocity.fullname)
+        self.image_paths[
+            utils.Radar_Products.rho_hv] = self.__get_radar_product_path(
+            root_dir, utils.Radar_Products.rho_hv.fullname)
+        self.image_paths[
+            utils.Radar_Products.zdr] = self.__get_radar_product_path(
+            root_dir, utils.Radar_Products.zdr.fullname)
 
     def get_path(self, radar_product):
         return self.image_paths[radar_product]
@@ -123,7 +101,7 @@ class Batch_Generator():
                  validate_k_index,
                  test_k_index,
                  default_batch_size=32,
-                 root_dir=RADAR_IMAGE_DIR):
+                 root_dir=utils.RADAR_IMAGE_DIR):
         self.label_dict = {}
         self.root_dir = root_dir
         self.__set_ml_sets(ml_split_csv,
@@ -177,18 +155,18 @@ class Batch_Generator():
 
     def __set_ml_sets_helper(self, ml_sets, ml_split_pd, val_k, test_k):
         no_val_pd = ml_split_pd[ml_split_pd.split_index != val_k]
-        ml_sets[ML_Set.training] = list(
+        ml_sets[utils.ML_Set.training] = list(
             no_val_pd[no_val_pd.split_index != test_k]['AWS_file'])
-        ml_sets[ML_Set.validation] = list(
+        ml_sets[utils.ML_Set.validation] = list(
             ml_split_pd[ml_split_pd.split_index == val_k][
                 'AWS_file'])
-        ml_sets[ML_Set.testing] = list(
+        ml_sets[utils.ML_Set.testing] = list(
             ml_split_pd[ml_split_pd.split_index == test_k]['AWS_file'])
 
         # Shuffle the data
-        np.random.shuffle(ml_sets[ML_Set.training])
-        np.random.shuffle(ml_sets[ML_Set.validation])
-        np.random.shuffle(ml_sets[ML_Set.testing])
+        np.random.shuffle(ml_sets[utils.ML_Set.training])
+        np.random.shuffle(ml_sets[utils.ML_Set.validation])
+        np.random.shuffle(ml_sets[utils.ML_Set.testing])
 
     def get_batch(self, ml_set, radar_product):
         """Get a batch of data for machine learning.
@@ -207,17 +185,19 @@ class Batch_Generator():
         """
         ground_truths = []
         train_data = []
+        filenames = []
         for ml_sets in [self.roost_sets, self.no_roost_sets]:
             indices = np.random.randint(low=0,
                                         high=len(ml_sets[ml_set]),
                                         size=self.batch_size / 2)
             for index in indices:
                 filename = ml_sets[ml_set][index]
+                filenames.append(filename)
                 is_roost = int(self.label_dict[filename].is_roost)
                 image_path = self.label_dict[filename].get_path(radar_product)
                 ground_truths.append([is_roost, 1 - is_roost])
                 train_data.append(self.__load_image(image_path))
-        return self.__format_image_data(train_data), np.array(ground_truths)
+        return self.__format_image_data(train_data), np.array(ground_truths), np.array(filenames)
 
     def __format_image_data(self, train_data):
         """Ensure that the batch of train data is properly shaped"""
@@ -243,8 +223,8 @@ def main():
                                       validate_k_index=3,
                                       test_k_index=4)
     x, y = batch_generator.get_batch(
-        ml_set=ML_Set.training,
-        radar_product=Radar_Products.reflectivity)
+        ml_set=utils.ML_Set.training,
+        radar_product=utils.Radar_Products.reflectivity)
     print y
 
 
