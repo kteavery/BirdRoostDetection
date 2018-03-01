@@ -1,5 +1,4 @@
 import os
-import BirdRoostDetection.BuildModels.ShallowCNN.model as ml_model
 from BirdRoostDetection.BuildModels import readMLData
 from BirdRoostDetection.BuildModels import ml_utils
 import numpy as np
@@ -7,6 +6,7 @@ import matplotlib.pyplot as plt
 import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
 import sys
+import BirdRoostDetection.BuildModels.ShallowCNN.model as ml_model
 
 fill_color = 255
 nan = float('nan')
