@@ -1,142 +1,95 @@
+"""Evaluate the shallow CNN model trained on a single radar product.
+
+Use command line arguments to select which radar product model to evaluate.
+Optionally input the location of the save file where the default is
+model/radar_product/
+Use an integer to select a radar_product from the following list:
+    0 : Reflectivity
+    1 : Velocity
+    2 : Correlation Coefficient
+    3 : Differential Reflectivity
+
+Example command:
+python eval.py \
+--radar_product=0 \
+--log_path=model/Reflectivity/Reflectivity.h5
+
+"""
 import os
 import BirdRoostDetection.BuildModels.ShallowCNN.model as ml_model
 from BirdRoostDetection.BuildModels import readMLData
-from PIL import Image
-import numpy as np
-import matplotlib.pyplot as plt
+from BirdRoostDetection.BuildModels import ml_utils
 import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
-import sys
-
-fill_color = 255
-nan = float('nan')
+import argparse
 
 
-def prediction_heat_map(model, img, width, height, stride):
-    heat_map = []
-    img_width = img.shape[1]
-    img_height = img.shape[2]
-    height_range = ((img_height / height) * (height / stride)) - (
-        height / stride) + 1
-    width_range = ((img_width / width) * (width / stride)) - (
-        width / stride) + 1
-    for i in range(width_range):
-        for j in range(height_range):
-            img_heat_map = prediction_heat_map_helper(i, j, width, height,
-                                                      stride, img,
-                                                      model, False)
-            heat_map.append(img_heat_map)
-    heat_map = np.array(heat_map)
-    return heat_map
+def eval(log_path, radar_product):
+    """Evaluate the shallow CNN model trained on a single radar product.
 
+        Args:
+            log_path: The location of the save directory. This method will
+                read the save located in this directory.
+            radar_product: The radar product the model is evaluating. This
+                should be a value of type utils.Radar_Products.
 
-def prediction_heat_map_helper(i, j, width, height, stride, img, model,
-                               show=False):
-    width_start = i * stride
-    height_start = j * stride
-    x = np.copy(img)
-    x[:, width_start:width_start + width,
-    height_start:height_start + height, :].fill(fill_color)
-    prediction = model.predict(x=x)[0][0]
-    # print prediction
-    if (show):
-        plt.imshow(x[0])
-        plt.show()
-    heat_map = np.full((x.shape[1:3]), nan)
-    heat_map[width_start:width_start + width,
-    height_start:height_start + height].fill(prediction)
-    return heat_map
-
-
-def create_heatmaps(log_path, radar_product, save_file, epoch=''):
+        """
     batch_generator = readMLData.Batch_Generator(
         ml_label_csv=settings.LABEL_CSV,
         ml_split_csv=settings.ML_SPLITS_DATA,
         validate_k_index=3,
         test_k_index=4,
-        default_batch_size=64)
-
-    titles = ['No Roost', 'Roost']
-    checkpoint_path = log_path + '/checkpoint/'
-    model = ml_model.build_model(inputDimensions=(240, 240, 3))
-    print os.path.join(checkpoint_path, save_file.format(epoch))
-    model.load_weights(os.path.join(checkpoint_path, save_file.format(epoch)))
-    batch_generator.get_batch(utils.ML_Set.testing,
-                              radar_product)
-
-    x, y, filenames = batch_generator.get_batch(utils.ML_Set.testing,
-                                                radar_product)
-    for i in range(len(filenames)):
-        img = x[i:i + 1]
-        label = y[i:i + 1]
-        filename = filenames[i]
-        loss, acc = model.evaluate(img, label)
-        print loss, acc, label, filename
-        prediction = model.predict(img)[0][0]
-        print prediction
-        heat_maps = []
-
-        heat_maps.append(
-            prediction_heat_map(model, img, 48, 48, 16))
-        heat_maps.append(
-            prediction_heat_map(model, img, 60, 60, 30))
-        heat_maps.append(
-            prediction_heat_map(model, img, 80, 80, 20))
-        for j in range(len(heat_maps)):
-            img_heat_map = np.array(heat_maps[j])
-            heat_maps[j] = np.nanmean(img_heat_map, axis=0)
-
-        heat_maps = np.array(heat_maps)
-
-        fig, axes = plt.subplots(nrows=1, ncols=4, figsize=(20, 5))
-        for dat, ax in zip(
-                [img[0], heat_maps[0], heat_maps[1], heat_maps[2]],
-                axes.flat):
-            im = ax.imshow(dat, vmin=0, vmax=1, cmap='jet')
-
-        fig.colorbar(im, ax=axes.ravel().tolist(), orientation='horizontal',
-                     aspect=60)
-
-        fig.suptitle(
-            '{0}: {1}, {2}'.format(titles[label[0][0]], prediction, filename))
-        save_file = filename + '.png'
-        print save_file
-        plt.savefig(save_file)
-        # plt.show()
-
-
-def eval(log_path, radar_product, save_file, epoch=''):
-    batch_generator = readMLData.Batch_Generator(
-        ml_label_csv=settings.LABEL_CSV,
-        ml_split_csv=settings.ML_SPLITS_DATA,
-        validate_k_index=3,
-        test_k_index=4,
-        default_batch_size=4000)
+        default_batch_size=5000)
 
     x, y, filenames = batch_generator.get_batch(utils.ML_Set.testing,
                                                 radar_product)
     model = ml_model.build_model(inputDimensions=(240, 240, 3))
-    checkpoint_path = log_path + '/checkpoint/'
-    model.load_weights(os.path.join(checkpoint_path, save_file.format(epoch)))
+    model.load_weights(log_path)
 
     loss, acc = model.evaluate(x, y)
     print loss, acc
 
 
-def main():
+def main(results):
     os.chdir(settings.WORKING_DIRECTORY)
-    radar_product = utils.Radar_Products(int(sys.argv[1]))
+    radar_product = utils.Radar_Products(results.radar_product)
+    if results.log_path is None:
+        log_path = os.path.join(
+            ml_utils.LOG_PATH.format(radar_product.fullname),
+            ml_utils.KERAS_SAVE_FILE.format(
+                radar_product.fullname, ''))
+    else:
+        log_path = results.log_path
 
-    eval(log_path='model/{}/'.format(radar_product.fullname),
-         radar_product=radar_product,
-         save_file='{}{}.h5'.format(radar_product.fullname, '{}'),
-         epoch=str(1700))
-
-    # create_heatmaps(log_path='model/{}/'.format(radar_product.fullname),
-    #                radar_product=radar_product,
-    #                save_file='{}{}.h5'.format(radar_product.fullname, '{}'),
-    #                epoch=str(1700))
+    print log_path
+    eval(log_path=log_path,
+         radar_product=radar_product)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-r',
+        '--radar_product',
+        type=int,
+        default=0,
+        help="""
+        Use an integer to select a radar_product from the following list:
+            0 : Reflectivity
+            1 : Velocity
+            2 : Correlation Coefficient
+            3 : Differential Reflectivity
+        """
+    )
+    parser.add_argument(
+        '-l',
+        '--log_path',
+        type=str,
+        default=None,
+        help="""
+        Optionally input the location of the save file where the default is
+        model/radar_product/radar_product.h5
+        """
+    )
+    results = parser.parse_args()
+    main(results)

@@ -61,18 +61,23 @@ class ML_Label():
         self.sunrise_time = datetime.datetime.strptime(pd_row['sunrise_time'],
                                                        '%Y-%m-%d %H:%M:%S')
         self.image_paths = {}
-        self.image_paths[
-            utils.Radar_Products.reflectivity] = self.__get_radar_product_path(
-            root_dir, utils.Radar_Products.reflectivity.fullname)
-        self.image_paths[
-            utils.Radar_Products.velocity] = self.__get_radar_product_path(
-            root_dir, utils.Radar_Products.velocity.fullname)
-        self.image_paths[
-            utils.Radar_Products.rho_hv] = self.__get_radar_product_path(
-            root_dir, utils.Radar_Products.rho_hv.fullname)
-        self.image_paths[
-            utils.Radar_Products.zdr] = self.__get_radar_product_path(
-            root_dir, utils.Radar_Products.zdr.fullname)
+        for radar_prodcut in utils.Radar_Products:
+            self.image_paths[radar_prodcut] = self.__get_radar_product_path(
+                root_dir, radar_prodcut.fullname)
+        '''
+        self.image_paths[utils.Radar_Products.reflectivity] = 
+        self.__get_radar_product_path(root_dir, 
+        utils.Radar_Products.reflectivity.fullname)
+        self.image_paths[utils.Radar_Products.velocity] = 
+        self.__get_radar_product_path(root_dir, 
+        utils.Radar_Products.velocity.fullname)
+        self.image_paths[utils.Radar_Products.rho_hv] = 
+        self.__get_radar_product_path(root_dir, 
+        utils.Radar_Products.rho_hv.fullname)
+        self.image_paths[utils.Radar_Products.zdr] = 
+        self.__get_radar_product_path(root_dir, 
+        utils.Radar_Products.zdr.fullname)
+        '''
 
     def get_path(self, radar_product):
         return self.image_paths[radar_product]
@@ -98,12 +103,16 @@ class Batch_Generator():
     def __init__(self,
                  ml_label_csv,
                  ml_split_csv,
-                 validate_k_index,
-                 test_k_index,
+                 validate_k_index=3,
+                 test_k_index=4,
                  default_batch_size=32,
                  root_dir=utils.RADAR_IMAGE_DIR):
         self.label_dict = {}
         self.root_dir = root_dir
+        self.no_roost_sets = {}
+        self.roost_sets = {}
+        self.no_roost_sets_V06 = {}
+        self.roost_sets_V06 = {}
         self.__set_ml_sets(ml_split_csv,
                            validate_k_index,
                            test_k_index)
@@ -144,29 +153,32 @@ class Batch_Generator():
                 ml_split_pd.drop(index, inplace=True)
 
         # Sort into train, test, and validation sets
-        self.no_roost_sets = {}
-        self.__set_ml_sets_helper(self.no_roost_sets,
+
+        self.__set_ml_sets_helper(self.no_roost_sets, self.no_roost_sets_V06,
                                   ml_split_pd[ml_split_pd.Roost != True],
                                   validate_k_index, test_k_index)
-        self.roost_sets = {}
-        self.__set_ml_sets_helper(self.roost_sets,
+        self.__set_ml_sets_helper(self.roost_sets, self.roost_sets_V06,
                                   ml_split_pd[ml_split_pd.Roost],
                                   validate_k_index, test_k_index)
 
-    def __set_ml_sets_helper(self, ml_sets, ml_split_pd, val_k, test_k):
+    def __set_ml_sets_helper(self, ml_sets, ml_sets_V06, ml_split_pd, val_k,
+                             test_k):
         no_val_pd = ml_split_pd[ml_split_pd.split_index != val_k]
         ml_sets[utils.ML_Set.training] = list(
             no_val_pd[no_val_pd.split_index != test_k]['AWS_file'])
         ml_sets[utils.ML_Set.validation] = list(
-            ml_split_pd[ml_split_pd.split_index == val_k][
-                'AWS_file'])
+            ml_split_pd[ml_split_pd.split_index == val_k]['AWS_file'])
         ml_sets[utils.ML_Set.testing] = list(
             ml_split_pd[ml_split_pd.split_index == test_k]['AWS_file'])
 
-        # Shuffle the data
-        np.random.shuffle(ml_sets[utils.ML_Set.training])
-        np.random.shuffle(ml_sets[utils.ML_Set.validation])
-        np.random.shuffle(ml_sets[utils.ML_Set.testing])
+        for key in ml_sets.keys():
+            ml_sets_V06[key] = []
+            for item in ml_sets[key]:
+                if int(item[-1]) >= 6:
+                    ml_sets_V06[key].append(item)
+
+            np.random.shuffle(ml_sets[key])
+            np.random.shuffle(ml_sets_V06[key])
 
     def get_batch(self, ml_set, radar_product):
         """Get a batch of data for machine learning.
@@ -186,7 +198,13 @@ class Batch_Generator():
         ground_truths = []
         train_data = []
         filenames = []
-        for ml_sets in [self.roost_sets, self.no_roost_sets]:
+        roost_sets = self.roost_sets
+        no_roost_sets = self.no_roost_sets
+        if radar_product == utils.Radar_Products.rho_hv or \
+                        radar_product == utils.Radar_Products.zdr:
+            roost_sets = self.roost_sets_V06
+            no_roost_sets = self.no_roost_sets_V06
+        for ml_sets in [roost_sets, no_roost_sets]:
             indices = np.random.randint(low=0,
                                         high=len(ml_sets[ml_set]),
                                         size=self.batch_size / 2)
@@ -197,7 +215,8 @@ class Batch_Generator():
                 image_path = self.label_dict[filename].get_path(radar_product)
                 ground_truths.append([is_roost, 1 - is_roost])
                 train_data.append(self.__load_image(image_path))
-        return self.__format_image_data(train_data), np.array(ground_truths), np.array(filenames)
+        return self.__format_image_data(train_data), np.array(
+            ground_truths), np.array(filenames)
 
     def __format_image_data(self, train_data):
         """Ensure that the batch of train data is properly shaped"""
