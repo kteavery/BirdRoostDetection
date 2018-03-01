@@ -16,12 +16,12 @@ python eval.py \
 
 """
 import os
-import BirdRoostDetection.BuildModels.ShallowCNN.model as ml_model
 from BirdRoostDetection.BuildModels import readMLData
 from BirdRoostDetection.BuildModels import ml_utils
 import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
 import argparse
+import BirdRoostDetection.BuildModels.ShallowCNN.model as ml_model
 
 
 def eval(log_path, radar_product):

@@ -13,20 +13,21 @@ Example command:
 python train.py \
 --radar_product=0 \
 --log_path=model/Reflectivity/ \
---eval_increment=5
---num_iterations=2500
---checkpoint_frequency=100
+--eval_increment=5 \
+--num_iterations=2500 \
+--checkpoint_frequency=100 \
 --learning_rate=.001
 
 """
 from BirdRoostDetection import utils
 from BirdRoostDetection.BuildModels import readMLData
-from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
 from BirdRoostDetection.BuildModels import ml_utils
 from keras.callbacks import TensorBoard
 import BirdRoostDetection.LoadSettings as settings
 import os
 import argparse
+from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
+
 
 
 def train(log_path, radar_product, eval_increment=5,
