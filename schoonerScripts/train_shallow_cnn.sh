@@ -20,14 +20,13 @@ RADARS_PRODUCT=${RADARS_PRODUCTS[$SLURM_ARRAY_TASK_ID]}
 
 echo $SLURM_ARRAY_TASK_ID
 
-python /home/carmen/PycharmProjects/BirdRoostDetection/BirdRoostDetection/\
-BuildModels/ShallowCNN/eval.py \
-python train.py \
+python /home/cchilson/gitRepositories/BirdRoostDetection/BirdRoostDetection/\
+BuildModels/ShallowCNN/train.py \
 --radar_product=$RADARS_PRODUCT \
 --log_path=model/Reflectivity/ \
---eval_increment=5
---num_iterations=10000
---checkpoint_frequency=100
+--eval_increment=5 \
+--num_iterations=10000 \
+--checkpoint_frequency=100 \
 --learning_rate=.0001
 
 
