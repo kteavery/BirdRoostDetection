@@ -1,11 +1,12 @@
-import os
-import pyart.io
-import pandas
-from BirdRoostDetection import utils
 import matplotlib
 
 matplotlib.use('agg')  # Required for running on schooner
 import matplotlib.pyplot as plt
+import os
+import pyart.io
+import pandas
+from BirdRoostDetection import utils
+
 import sys
 from BirdRoostDetection.PrepareData import NexradUtils
 import BirdRoostDetection.LoadSettings as settings
