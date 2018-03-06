@@ -3,6 +3,7 @@ import pyart.io
 import pandas
 from BirdRoostDetection import utils
 import matplotlib
+
 matplotlib.use('agg')  # Required for running on schooner
 import matplotlib.pyplot as plt
 import sys
@@ -84,10 +85,14 @@ def main():
     file_names = list(radar_labels['AWS_file'])
     # np.random.shuffle(file_names)
     for file_name in file_names:
-        print file_name
-        full_path = os.path.join(utils.RADAR_FILE_DIR,
-                                 NexradUtils.getBasePath(file_name), file_name)
-        plot_radar_files(full_path)
+        try:
+            print file_name
+            full_path = os.path.join(utils.RADAR_FILE_DIR,
+                                     NexradUtils.getBasePath(file_name),
+                                     file_name)
+            plot_radar_files(full_path)
+        except Exception as e:
+            print '{}, {}'.format(file_name, str(e))
 
 
 if __name__ == "__main__":
