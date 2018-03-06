@@ -1,5 +1,4 @@
 import matplotlib
-
 matplotlib.use('agg')  # Required for running on schooner
 import matplotlib.pyplot as plt
 import pyart.graph
@@ -44,6 +43,7 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         cmap = None
         vmin = None
         vmax = None
+
         if (plot[0] == 'reflectivity'):
             vmin = -20
             vmax = 30
@@ -77,8 +77,8 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         display.set_limits((-radius, radius), (-radius, radius), ax=ax)
 
         display.set_aspect_ratio('equal', ax=ax)
-        display.plot_range_rings(range(100, 350, 100), lw=0.5, col='black',
-                                 ax=ax)
+        #display.plot_range_rings(range(100, 350, 100), lw=0.5, col='black',
+        #                         ax=ax)
     if save:
         plt.savefig(save)
         plt.close()
