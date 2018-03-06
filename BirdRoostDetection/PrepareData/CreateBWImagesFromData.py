@@ -2,6 +2,8 @@ import os
 import pyart.io
 import pandas
 from BirdRoostDetection import utils
+import matplotlib
+matplotlib.use('agg')  # Required for running on schooner
 import matplotlib.pyplot as plt
 import sys
 from BirdRoostDetection.PrepareData import NexradUtils
@@ -33,9 +35,9 @@ def plot_radar_files(file_path):
         else:
             keys = ['velocity', 'reflectivity']
         for key in keys:
-            plt.figure(figsize=(3, 3))
+            fig, ax = plt.subplots(figsize=(3, 3))
             for i in range(3):
-                plot_ppi(radar=rad, field=key, ax=plt,
+                plot_ppi(radar=rad, field=key, ax=ax,
                          sweep=i)
             plt.axis('off')
             full_img_path = img_path.format(key)

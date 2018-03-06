@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('agg')  # Required for running on schooner
 import pyart.io.nexrad_common as nexrad
 import sys
 from gpxpy import geo
