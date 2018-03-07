@@ -56,7 +56,7 @@ def train(log_path, radar_product, eval_increment=5,
     checkpoint_path = log_path + ml_utils.CHECKPOINT_DIR
     if not os.path.exists(checkpoint_path):
         os.makedirs(os.path.dirname(checkpoint_path))
-    model = keras_model.build_model(inputDimensions=(240, 240, 3), lr=lr)
+    model = keras_model.build_model(inputDimensions=(240, 240, 1), lr=lr)
 
     # Setup callbacks
     callback = TensorBoard(log_path)

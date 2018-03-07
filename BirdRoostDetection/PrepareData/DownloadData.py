@@ -13,7 +13,7 @@ python DownloadData.py KLIX
 import BirdRoostDetection.LoadSettings as settings
 import os
 import shutil
-import sys
+import argparse
 import pandas
 from BirdRoostDetection.PrepareData import AWSNexradData
 from BirdRoostDetection.PrepareData import NexradUtils
@@ -81,14 +81,23 @@ def main():
     """Formatted to run either locally or on schooner. Read in csv and get radar
      files listed in 'AWS_file' column"""
     savepath = 'radarfiles/'
-    radar = sys.argv[1]
     labels = pandas.read_csv(filepath_or_buffer=settings.LABEL_CSV,
                              skip_blank_lines=True)
-    radar_labels = labels[labels.radar == radar]
+    radar_labels = labels[labels.radar == results.radar]
     fileNames = list(radar_labels['AWS_file'])
-    downloadRadarsFromList(fileNames, savepath, 'error_{0}.txt'.format(radar))
+    downloadRadarsFromList(fileNames, savepath,
+                           'error_{0}.txt'.format(results.radar))
 
 
 if __name__ == "__main__":
     os.chdir(settings.WORKING_DIRECTORY)
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-r',
+        '--radar',
+        type=str,
+        default='KLIX',
+        help=""" A 4 letter key of a USA NEXRAD radar. Example: KLIX"""
+    )
+    results = parser.parse_args()
+    main(results)

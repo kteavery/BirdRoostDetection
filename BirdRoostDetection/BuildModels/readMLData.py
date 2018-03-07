@@ -63,20 +63,6 @@ class ML_Label():
         for radar_prodcut in utils.Radar_Products:
             self.image_paths[radar_prodcut] = self.__get_radar_product_path(
                 root_dir, radar_prodcut.fullname)
-        '''
-        self.image_paths[utils.Radar_Products.reflectivity] = 
-        self.__get_radar_product_path(root_dir, 
-        utils.Radar_Products.reflectivity.fullname)
-        self.image_paths[utils.Radar_Products.velocity] = 
-        self.__get_radar_product_path(root_dir, 
-        utils.Radar_Products.velocity.fullname)
-        self.image_paths[utils.Radar_Products.rho_hv] = 
-        self.__get_radar_product_path(root_dir, 
-        utils.Radar_Products.rho_hv.fullname)
-        self.image_paths[utils.Radar_Products.zdr] = 
-        self.__get_radar_product_path(root_dir, 
-        utils.Radar_Products.zdr.fullname)
-        '''
 
     def get_path(self, radar_product):
         return self.image_paths[radar_product]
@@ -199,8 +185,8 @@ class Batch_Generator():
         filenames = []
         roost_sets = self.roost_sets
         no_roost_sets = self.no_roost_sets
-        if radar_product == utils.Radar_Products.rho_hv or \
-                radar_product == utils.Radar_Products.zdr:
+        if radar_product == utils.Radar_Products.cc or \
+                radar_product == utils.Radar_Products.diff_reflectivity:
             roost_sets = self.roost_sets_V06
             no_roost_sets = self.no_roost_sets_V06
         for ml_sets in [roost_sets, no_roost_sets]:

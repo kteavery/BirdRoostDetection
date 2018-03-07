@@ -10,8 +10,9 @@ python CreateImagesFromData.py KLIX
 import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection.PrepareData import VisualizeNexradData
 from BirdRoostDetection.PrepareData import NexradUtils
+from BirdRoostDetection import utils
 import os
-import sys
+import argparse
 import pyart.io
 from PIL import Image
 import pandas
@@ -49,7 +50,7 @@ def createLabelForFiles(fileNames, saveDir):
                 rad = pyart.io.read_nexrad_archive(file.name)
 
                 dualPol = int(name[-1:]) >= 6
-                VisualizeNexradData.visualizeLDMdata(rad, imgPath, dualPol)
+                VisualizeNexradData.visualizeRadardata(rad, imgPath, dualPol)
                 file.close()
 
                 d1 = imgDir.replace(saveDir,
@@ -97,19 +98,27 @@ def createLabelForFiles(fileNames, saveDir):
             print '{}, {}'.format(imgPath, str(e))
 
 
-def main():
+def main(results):
     """Formatted to run either locally or on schooner. Read in csv and get radar
      files listed in 'AWS_file' column. Save these files out as png images."""
-    savepath = 'radarimages/'
-    radar = sys.argv[1]
+    savepath = utils.RADAR_IMAGE_DIR
     labels = pandas.read_csv(filepath_or_buffer=settings.LABEL_CSV,
                              skip_blank_lines=True)
 
-    radar_labels = labels[labels.radar == radar]
+    radar_labels = labels[labels.radar == results.radar]
     createLabelForFiles(fileNames=list(radar_labels['AWS_file']),
                         saveDir=savepath)
 
 
 if __name__ == "__main__":
     os.chdir(settings.WORKING_DIRECTORY)
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-r',
+        '--radar',
+        type=str,
+        default='KLIX',
+        help=""" A 4 letter key of a USA NEXRAD radar. Example: KLIX"""
+    )
+    results = parser.parse_args()
+    main(results)
