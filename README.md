@@ -8,6 +8,6 @@ This code was developed for the Oklahoma Biological Survey for a research projec
 - Numpy http://www.numpy.org/
 - Matplotlib https://matplotlib.org/
 
-##Setting up Amazon Web Services
+## Setting up Amazon Web Services
 - In order to access radar files stored on Amazon Web Services you will first need to setup the .boto file with your user credentials.
 - See instructions here: https://aws.amazon.com/developers/getting-started/python/
