@@ -25,29 +25,40 @@ plot_dict = {
 }
 
 
-def plot_radar_files(file_path):
-    img_path = file_path.replace(utils.RADAR_FILE_DIR,
-                                 utils.RADAR_IMAGE_DIR + '{0}/') + '_{0}.png'
-    if (not os.path.exists(img_path.format(REFLECTIVITY))):
-        file = open(file_path, 'r')
-        rad = pyart.io.read_nexrad_archive(file.name)
-        if (6 <= int(file_path[-1])):
-            keys = ['velocity', 'differential_reflectivity', 'reflectivity',
-                    'cross_correlation_ratio']
-        else:
-            keys = ['velocity', 'reflectivity']
-        for key in keys:
-            fig, ax = plt.subplots(figsize=(3, 3))
-            for i in range(3):
-                plot_ppi(radar=rad, field=key, ax=ax,
-                         sweep=i)
-            plt.axis('off')
-            full_img_path = img_path.format(key)
-            img_folder = os.path.dirname(full_img_path)
-            if not os.path.isdir(img_folder):
-                os.makedirs(img_folder)
-            plt.savefig(full_img_path)
-            Image.open(full_img_path).convert('L').save(full_img_path)
+def plot_radar_files(file_names):
+    for file_name in file_names:
+        try:
+            print file_name
+            file_path = os.path.join(utils.RADAR_FILE_DIR,
+                                     NexradUtils.getBasePath(file_name),
+                                     file_name)
+            img_path = file_path.replace(utils.RADAR_FILE_DIR,
+                                         utils.RADAR_IMAGE_DIR + '{0}/') + \
+                       '_{0}.png'
+            if (not os.path.exists(img_path.format(REFLECTIVITY))):
+                file = open(file_path, 'r')
+                rad = pyart.io.read_nexrad_archive(file.name)
+                if (6 <= int(file_path[-1])):
+                    keys = ['velocity', 'differential_reflectivity',
+                            'reflectivity',
+                            'cross_correlation_ratio']
+                else:
+                    keys = ['velocity', 'reflectivity']
+                for key in keys:
+                    fig, ax = plt.subplots(figsize=(3, 3))
+                    for i in range(3):
+                        plot_ppi(radar=rad, field=key, ax=ax,
+                                 sweep=i)
+                    plt.axis('off')
+                    full_img_path = img_path.format(key)
+                    img_folder = os.path.dirname(full_img_path)
+                    if not os.path.isdir(img_folder):
+                        os.makedirs(img_folder)
+                    plt.savefig(full_img_path)
+                    plt.close()
+                    Image.open(full_img_path).convert('L').save(full_img_path)
+        except Exception as e:
+            print '{}, {}'.format(file_name, str(e))
 
 
 def plot_ppi(
@@ -84,16 +95,7 @@ def main():
 
     radar_labels = labels[labels.radar == radar]
     file_names = list(radar_labels['AWS_file'])
-    # np.random.shuffle(file_names)
-    for file_name in file_names:
-        try:
-            print file_name
-            full_path = os.path.join(utils.RADAR_FILE_DIR,
-                                     NexradUtils.getBasePath(file_name),
-                                     file_name)
-            plot_radar_files(full_path)
-        except Exception as e:
-            print '{}, {}'.format(file_name, str(e))
+    plot_radar_files(file_names)
 
 
 if __name__ == "__main__":
