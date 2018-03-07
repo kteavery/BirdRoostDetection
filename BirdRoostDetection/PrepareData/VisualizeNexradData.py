@@ -1,12 +1,9 @@
-import matplotlib
-
-matplotlib.use('agg')  # Required for running on schooner
 import matplotlib.pyplot as plt
 import pyart.graph
 import pyart.io
 
 
-def visualizeLDMdata(radar, save, dualPolarization=False):
+def visualizeLDMdata(radar, save, dualPolarization=False, displayCircles=False):
     """Visualize the LDM2 radar data. Either display or save resulting image.
 
     This method was modified from code found at the following website :
@@ -20,6 +17,7 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         radar:
         save:
         dualPolarization:
+        displayCircles:
     """
     display = pyart.graph.RadarDisplay(radar)
     if (dualPolarization):
@@ -44,6 +42,7 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         cmap = None
         vmin = None
         vmax = None
+
         if (plot[0] == 'reflectivity'):
             vmin = -20
             vmax = 30
@@ -77,8 +76,9 @@ def visualizeLDMdata(radar, save, dualPolarization=False):
         display.set_limits((-radius, radius), (-radius, radius), ax=ax)
 
         display.set_aspect_ratio('equal', ax=ax)
-        display.plot_range_rings(range(100, 350, 100), lw=0.5, col='black',
-                                 ax=ax)
+        if (displayCircles):
+            display.plot_range_rings(range(100, 350, 100), lw=0.5, col='black',
+                                     ax=ax)
     if save:
         plt.savefig(save)
         plt.close()

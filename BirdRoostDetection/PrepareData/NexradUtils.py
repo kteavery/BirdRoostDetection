@@ -143,14 +143,3 @@ def getBasePath(radarFileName):
     radarFileName = os.path.basename(radarFileName)
     return os.path.join(radarFileName[0:4], radarFileName[4:8],
                         radarFileName[8:10], radarFileName[10:12])
-
-
-def main():
-    """Example of how to use methods of this class."""
-    radar, distance = getClosestRadar(30.361, -90.0946)
-    print 'Roost found at radar {0}:\n' \
-          '{1:.3f} km from the radar'.format(radar, distance)
-
-
-if __name__ == "__main__":
-    main()

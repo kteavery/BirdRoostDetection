@@ -1,8 +1,7 @@
 """Read in csv and create train, test, and validation splits for ML."""
-
+import BirdRoostDetection.LoadSettings as settings
 import os
 import pandas
-import BirdRoostDetection.LoadSettings as settings
 
 
 def ml_splits_by_date(csv_input_path,
@@ -58,12 +57,11 @@ def ml_splits_by_date(csv_input_path,
 
 
 def main():
-    working_dir = settings.WORKING_DIRECTORY
-    os.chdir(working_dir)
     ml_splits_by_date(csv_input_path=settings.LABEL_CSV,
                       csv_output_path=settings.ML_SPLITS_DATA,
                       k=5)
 
 
 if __name__ == "__main__":
+    os.chdir(settings.WORKING_DIRECTORY)
     main()

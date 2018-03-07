@@ -10,13 +10,13 @@ Example command:
 python DownloadData.py KLIX
 """
 
+import BirdRoostDetection.LoadSettings as settings
 import os
 import shutil
 import sys
 import pandas
 from BirdRoostDetection.PrepareData import AWSNexradData
 from BirdRoostDetection.PrepareData import NexradUtils
-import BirdRoostDetection.LoadSettings as settings
 
 
 def downloadRadarsFromList(fileNames, saveDir, error_file_name):
@@ -82,7 +82,6 @@ def main():
      files listed in 'AWS_file' column"""
     savepath = 'radarfiles/'
     radar = sys.argv[1]
-    os.chdir(settings.WORKING_DIRECTORY)
     labels = pandas.read_csv(filepath_or_buffer=settings.LABEL_CSV,
                              skip_blank_lines=True)
     radar_labels = labels[labels.radar == radar]
@@ -91,4 +90,5 @@ def main():
 
 
 if __name__ == "__main__":
+    os.chdir(settings.WORKING_DIRECTORY)
     main()

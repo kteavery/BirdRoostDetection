@@ -4,7 +4,6 @@ The code in Sunrise class was modified from jebeaudet at https://github.com/
 # jebeaudet/SunriseSunsetCalculator/blob/master/sunrise_sunset.py
 """
 
-from __future__ import print_function
 import math
 import datetime
 
@@ -100,17 +99,3 @@ def calculate_sunrise(year, month, day, latitude, longitude):
                                 minute=m_rise)
 
     return rise_dt
-
-
-def main():
-    """Example code for calling getting sunrise time"""
-    rise_dt = calculate_sunrise(year=2018,
-                                month=2,
-                                day=1,
-                                latitude=51.4826,
-                                longitude=0.0077)
-    print(rise_dt)
-
-
-if __name__ == "__main__":
-    main()

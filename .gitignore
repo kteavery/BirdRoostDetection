@@ -7,7 +7,9 @@
 *.netcdf
 *.pyc
 BirdRoostDetection.egg-info/*
+venv/
 build/*
 dist/*
 MLData/
 QuickCode
+.DS_Store
