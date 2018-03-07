@@ -1,9 +1,9 @@
+import BirdRoostDetection.LoadSettings as settings
 import os
 from BirdRoostDetection.BuildModels import readMLData
 from BirdRoostDetection.BuildModels import ml_utils
 import numpy as np
 import matplotlib.pyplot as plt
-import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
 import sys
 import BirdRoostDetection.BuildModels.ShallowCNN.model as ml_model
@@ -106,7 +106,6 @@ def create_heatmaps(log_path, radar_product, epoch=''):
 
 
 def main():
-    os.chdir(settings.WORKING_DIRECTORY)
     assert (int(sys.argv[1]) >= 0 and int(sys.argv[1]) <= 3), \
         "Radar product command line argument must be one of the following " \
         "values: 0, 1, 2, 3"
@@ -121,4 +120,5 @@ def main():
 
 
 if __name__ == "__main__":
+    os.chdir(settings.WORKING_DIRECTORY)
     main()

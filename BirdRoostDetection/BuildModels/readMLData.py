@@ -4,7 +4,6 @@ import datetime
 from BirdRoostDetection.PrepareData import NexradUtils
 import numpy as np
 from PIL import Image
-import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
 
 
@@ -201,7 +200,7 @@ class Batch_Generator():
         roost_sets = self.roost_sets
         no_roost_sets = self.no_roost_sets
         if radar_product == utils.Radar_Products.rho_hv or \
-                        radar_product == utils.Radar_Products.zdr:
+                radar_product == utils.Radar_Products.zdr:
             roost_sets = self.roost_sets_V06
             no_roost_sets = self.no_roost_sets_V06
         for ml_sets in [roost_sets, no_roost_sets]:
@@ -233,19 +232,3 @@ class Batch_Generator():
         """
         img = Image.open(filename)
         return np.array(img)
-
-
-def main():
-    os.chdir(settings.WORKING_DIRECTORY)
-    batch_generator = Batch_Generator(ml_label_csv=settings.LABEL_CSV,
-                                      ml_split_csv=settings.ML_SPLITS_DATA,
-                                      validate_k_index=3,
-                                      test_k_index=4)
-    x, y = batch_generator.get_batch(
-        ml_set=utils.ML_Set.training,
-        radar_product=utils.Radar_Products.reflectivity)
-    print y
-
-
-if __name__ == "__main__":
-    main()

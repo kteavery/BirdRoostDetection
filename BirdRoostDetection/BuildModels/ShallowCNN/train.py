@@ -19,11 +19,11 @@ python train.py \
 --learning_rate=.001
 
 """
+import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
 from BirdRoostDetection.BuildModels import readMLData
 from BirdRoostDetection.BuildModels import ml_utils
 from keras.callbacks import TensorBoard
-import BirdRoostDetection.LoadSettings as settings
 import os
 import argparse
 from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
@@ -110,6 +110,7 @@ def main(results):
 
 
 if __name__ == "__main__":
+    os.chdir(settings.WORKING_DIRECTORY)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-r',

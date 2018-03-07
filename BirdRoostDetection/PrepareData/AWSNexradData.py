@@ -1,4 +1,5 @@
 """ Get NEXRAD radar data from Amazon Web Services."""
+import BirdRoostDetection.LoadSettings as settings
 import tempfile
 import boto
 import pyart.graph
@@ -158,4 +159,5 @@ def main():
 
 
 if __name__ == "__main__":
+    os.chdir(settings.WORKING_DIRECTORY)
     main()

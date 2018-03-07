@@ -7,6 +7,7 @@ from each radar separately. For our research we had 81 radars and ran this file
 Example command:
 python CreateImagesFromData.py KLIX
 """
+import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection.PrepareData import VisualizeNexradData
 from BirdRoostDetection.PrepareData import NexradUtils
 import os
@@ -14,7 +15,6 @@ import sys
 import pyart.io
 from PIL import Image
 import pandas
-import BirdRoostDetection.LoadSettings as settings
 
 
 def createLabelForFiles(fileNames, saveDir):
@@ -102,7 +102,6 @@ def main():
      files listed in 'AWS_file' column. Save these files out as png images."""
     savepath = 'radarimages/'
     radar = sys.argv[1]
-    os.chdir(settings.WORKING_DIRECTORY)
     labels = pandas.read_csv(filepath_or_buffer=settings.LABEL_CSV,
                              skip_blank_lines=True)
 
@@ -112,4 +111,5 @@ def main():
 
 
 if __name__ == "__main__":
+    os.chdir(settings.WORKING_DIRECTORY)
     main()

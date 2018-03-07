@@ -1,6 +1,4 @@
-import matplotlib
-
-matplotlib.use('agg')  # Required for running on schooner
+import BirdRoostDetection.LoadSettings as settings
 import matplotlib.pyplot as plt
 import os
 import pyart.io
@@ -9,7 +7,6 @@ from BirdRoostDetection import utils
 
 import sys
 from BirdRoostDetection.PrepareData import NexradUtils
-import BirdRoostDetection.LoadSettings as settings
 from PIL import Image
 
 REFLECTIVITY = 'reflectivity'
@@ -89,7 +86,6 @@ def main():
     """Formatted to run either locally or on schooner. Read in csv and get radar
      files listed in 'AWS_file' column. Save these files out as png images."""
     radar = sys.argv[1]
-    os.chdir(settings.WORKING_DIRECTORY)
     labels = pandas.read_csv(filepath_or_buffer=settings.LABEL_CSV,
                              skip_blank_lines=True)
 

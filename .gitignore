@@ -12,3 +12,4 @@ build/*
 dist/*
 MLData/
 QuickCode
+.DS_Store
