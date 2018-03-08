@@ -18,10 +18,7 @@ def plot_radar_files(file_names):
             img_path = file_path.replace(utils.RADAR_FILE_DIR,
                                          utils.RADAR_IMAGE_DIR + \
                                          '{0}/') + '_{0}.png'
-            if (not os.path.exists(img_path.format(
-                    utils.Radar_Products.reflectivity.fullname))):
-                VisualizeNexradData.visualizeBWRadarData(file_path, img_path,
-                                                         True)
+            VisualizeNexradData.visualizeBWRadarData(file_path, img_path, True)
         except Exception as e:
             print '{}, {}'.format(file_name, str(e))
 

@@ -127,7 +127,8 @@ class Batch_Generator():
         """
         ml_split_pd = pandas.read_csv(ml_split_csv)
         # Remove files that weren't found
-        all_files = getListOfFilesInDirectory(self.root_dir + '/All', '.png')
+        all_files = getListOfFilesInDirectory(self.root_dir + '/All_Color',
+                                              '.png')
         all_files_dict = {}
         for i in range(len(all_files)):
             all_files_dict[
@@ -138,9 +139,8 @@ class Batch_Generator():
                 ml_split_pd.drop(index, inplace=True)
 
         # Sort into train, test, and validation sets
-
         self.__set_ml_sets_helper(self.no_roost_sets, self.no_roost_sets_V06,
-                                  ml_split_pd[ml_split_pd.Roost != True],
+                                  ml_split_pd[ml_split_pd.Roost == False],
                                   validate_k_index, test_k_index)
         self.__set_ml_sets_helper(self.roost_sets, self.roost_sets_V06,
                                   ml_split_pd[ml_split_pd.Roost],
@@ -186,7 +186,7 @@ class Batch_Generator():
         roost_sets = self.roost_sets
         no_roost_sets = self.no_roost_sets
         if radar_product == utils.Radar_Products.cc or \
-                radar_product == utils.Radar_Products.diff_reflectivity:
+                        radar_product == utils.Radar_Products.diff_reflectivity:
             roost_sets = self.roost_sets_V06
             no_roost_sets = self.no_roost_sets_V06
         for ml_sets in [roost_sets, no_roost_sets]:
@@ -205,7 +205,14 @@ class Batch_Generator():
 
     def __format_image_data(self, train_data):
         """Ensure that the batch of train data is properly shaped"""
-        return np.array(train_data)[:, 5:245, 5:245, 0:3]
+        dim = 120
+        train_data_np = np.array(train_data)
+        shape = train_data_np.shape
+        train_data_np = train_data_np.reshape(shape[0], shape[1], shape[2], 1)
+        w_mid = shape[1] / 2
+        h_mid = shape[2] / 2
+        return train_data_np[:, w_mid - dim:w_mid + dim,
+               h_mid - dim:h_mid + dim, :]
 
     def __load_image(self, filename):
         """Load image from filepath.
@@ -216,5 +223,5 @@ class Batch_Generator():
         Returns:
             Image as numpy array.
         """
-        img = Image.open(filename)
-        return np.array(img)
+        img = np.array(Image.open(filename))
+        return img

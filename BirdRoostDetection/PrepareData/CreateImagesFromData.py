@@ -38,7 +38,7 @@ def createLabelForFiles(fileNames, saveDir):
             name = f.replace('.gz', '')
             imgDir = os.path.join(saveDir, NexradUtils.getBasePath(f)) + '/'
             imgPath = os.path.join(
-                imgDir.replace(saveDir, os.path.join(saveDir, 'All/')),
+                imgDir.replace(saveDir, os.path.join(saveDir, 'All_Color/')),
                 name + '.png')
             print imgPath
 
@@ -53,13 +53,15 @@ def createLabelForFiles(fileNames, saveDir):
                 VisualizeNexradData.visualizeRadardata(rad, imgPath, dualPol)
                 file.close()
 
-                d1 = imgDir.replace(saveDir,
-                                    os.path.join(saveDir, 'Reflectivity/'))
-                d2 = imgDir.replace(saveDir, os.path.join(saveDir, 'Velocity/'))
+                d1 = imgDir.replace(saveDir, os.path.join(saveDir,
+                                                          'Reflectivity_Color/'))
+                d2 = imgDir.replace(saveDir, os.path.join(saveDir,
+                                                          'Velocity_Color/'))
                 if dualPol:
-                    d3 = imgDir.replace(saveDir, os.path.join(saveDir, 'Zdr/'))
-                    d4 = imgDir.replace(saveDir,
-                                        os.path.join(saveDir, 'Rho_HV/'))
+                    d3 = imgDir.replace(saveDir, os.path.join(saveDir,
+                                                              'Differential_Reflectivity_Color/'))
+                    d4 = imgDir.replace(saveDir, os.path.join(saveDir,
+                                                              'Differential_Reflectivity_Color/'))
 
                 if not os.path.exists(d1):
                     os.makedirs(d1)
@@ -101,13 +103,12 @@ def createLabelForFiles(fileNames, saveDir):
 def main(results):
     """Formatted to run either locally or on schooner. Read in csv and get radar
      files listed in 'AWS_file' column. Save these files out as png images."""
-    savepath = utils.RADAR_IMAGE_DIR
     labels = pandas.read_csv(filepath_or_buffer=settings.LABEL_CSV,
                              skip_blank_lines=True)
 
     radar_labels = labels[labels.radar == results.radar]
     createLabelForFiles(fileNames=list(radar_labels['AWS_file']),
-                        saveDir=savepath)
+                        saveDir=utils.RADAR_IMAGE_DIR)
 
 
 if __name__ == "__main__":

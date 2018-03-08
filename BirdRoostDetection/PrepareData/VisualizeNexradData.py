@@ -83,25 +83,27 @@ def visualizeBWRadarData(file_path, img_path, save):
                 utils.Radar_Products.diff_reflectivity, utils.Radar_Products.cc]
     else:
         keys = [utils.Radar_Products.reflectivity,
-                utils.Radar_Products.velocity,]
+                utils.Radar_Products.velocity, ]
     for key in keys:
-        fig, ax = plt.subplots(figsize=(3, 3))
-        for i in range(3):
-            __plot_ppi(radar=rad, field=key, ax=ax,
-                     sweep=i)
-        plt.axis('off')
+        if not (save and os.path.exists(img_path.format(key.fullname))):
+            fig, ax = plt.subplots(figsize=(3, 3))
+            num_sweeps = len(rad.sweep_number['data'])
+            for i in range(min(num_sweeps, 3)):
+                __plot_ppi(radar=rad, field=key, ax=ax,
+                           sweep=i)
+            plt.axis('off')
 
-        if save:
-            full_img_path = img_path.format(key.fullname)
-            img_folder = os.path.dirname(full_img_path)
-            if not os.path.isdir(img_folder):
-                os.makedirs(img_folder)
-            plt.savefig(full_img_path)
-            Image.open(full_img_path).convert('L').save(full_img_path)
+            if save:
+                full_img_path = img_path.format(key.fullname)
+                img_folder = os.path.dirname(full_img_path)
+                if not os.path.isdir(img_folder):
+                    os.makedirs(img_folder)
+                plt.savefig(full_img_path)
+                Image.open(full_img_path).convert('L').save(full_img_path)
 
-        else:
-            plt.show()
-        plt.close()
+            else:
+                plt.show()
+            plt.close()
 
 
 def __plot_ppi(radar, field, ax, sweep=0):
