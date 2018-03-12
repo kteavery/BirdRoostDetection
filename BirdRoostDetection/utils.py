@@ -4,12 +4,26 @@ RADAR_FILE_DIR = 'radarfiles/'
 RADAR_IMAGE_DIR = 'radarimages/'
 
 
-
 class ML_Set(Enum):
     """Machine learning set enum, includes validation, train, and test."""
     validation = 0, 'Validation'
     training = 1, 'Training'
     testing = 2, 'Testing'
+
+    def __new__(cls, value, name):
+        member = object.__new__(cls)
+        member._value_ = value
+        member.fullname = name
+        return member
+
+    def __int__(self):
+        return self.value
+
+
+class ML_Model(Enum):
+    Shallow_CNN = 0, 'Shallow_CNN'
+    Shallow_CNN_All = 1, 'Shallow_CNN_All'
+    Shallow_CNN_Time = 2, 'Shallow_CNN_Time'
 
     def __new__(cls, value, name):
         member = object.__new__(cls)
@@ -36,6 +50,7 @@ class Radar_Products(Enum):
 
     def __int__(self):
         return self.value
+
 
 Legacy_radar_products = [Radar_Products.reflectivity, Radar_Products.velocity]
 

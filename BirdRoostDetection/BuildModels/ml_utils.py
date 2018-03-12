@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 KERAS_SAVE_FILE = '{}{}.h5'
-LOG_PATH = 'model/{}/'
+LOG_PATH = 'model/{}/{}/'
 CHECKPOINT_DIR = '/checkpoint/'
 
 def write_log(callback, names, logs, batch_no):

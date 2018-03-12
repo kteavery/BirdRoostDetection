@@ -17,6 +17,7 @@ python train.py \
 --num_iterations=2500 \
 --checkpoint_frequency=100 \
 --learning_rate=.001
+--model=0
 
 """
 import BirdRoostDetection.LoadSettings as settings
@@ -29,9 +30,9 @@ import argparse
 from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
 
 
-
 def train(log_path, radar_product, eval_increment=5,
-          num_iterations=2500, checkpoint_frequency=100, lr=.0001):
+          num_iterations=2500, checkpoint_frequency=100, lr=.0001,
+          model_name=utils.ML_Model.Shallow_CNN, dual_pol=True):
     """"Train the shallow CNN model on a single radar product.
 
     Args:
@@ -46,6 +47,7 @@ def train(log_path, radar_product, eval_increment=5,
             perform before saving out a checkpoint of the model training.
         lr: The learning rate of the model, this value must be between 0 and 1.
             e.g. .1, .05, .001
+        model_name, Select the model to train. Must be of type utils.ML_Model
     """
     batch_generator = readMLData.Batch_Generator(
         ml_label_csv=settings.LABEL_CSV,
@@ -56,7 +58,12 @@ def train(log_path, radar_product, eval_increment=5,
     checkpoint_path = log_path + ml_utils.CHECKPOINT_DIR
     if not os.path.exists(checkpoint_path):
         os.makedirs(os.path.dirname(checkpoint_path))
-    model = keras_model.build_model(inputDimensions=(240, 240, 1), lr=lr)
+    if model_name == utils.ML_Model.Shallow_CNN:
+        model = keras_model.build_model(inputDimensions=(240, 240, 1), lr=lr)
+    elif model_name == utils.ML_Model.Shallow_CNN_All:
+        model = keras_model.build_model(inputDimensions=(240, 240, 4), lr=lr)
+    else:
+        raise NotImplementedError
 
     # Setup callbacks
     callback = TensorBoard(log_path)
@@ -67,18 +74,33 @@ def train(log_path, radar_product, eval_increment=5,
     progress_string = '{} Epoch: {} Loss: {} Accuracy {}'
 
     for batch_no in range(num_iterations):
-        x, y, _ = batch_generator.get_batch(
-            ml_set=utils.ML_Set.training,
-            radar_product=radar_product)
+        if model_name == utils.ML_Model.Shallow_CNN:
+            x, y, _ = batch_generator.get_batch(
+                ml_set=utils.ML_Set.training,
+                radar_product=radar_product)
+        elif model_name == utils.ML_Model.Shallow_CNN_All:
+            x, y, _ = batch_generator.get_batch_all_radar_products(
+                ml_set=utils.ML_Set.training,
+                dualPol=dual_pol)
+        else:
+            raise NotImplementedError
         train_logs = model.train_on_batch(x, y)
         print progress_string.format(utils.ML_Set.training.fullname, batch_no,
                                      train_logs[0], train_logs[1])
         ml_utils.write_log(callback, train_names, train_logs, batch_no)
         if (batch_no % eval_increment == 0):
             model.save_weights(log_path + save_file.format(''))
-            x_, y_, _ = batch_generator.get_batch(
-                ml_set=utils.ML_Set.validation,
-                radar_product=radar_product)
+            if model_name == utils.ML_Model.Shallow_CNN:
+                x_, y_, _ = batch_generator.get_batch(
+                    ml_set=utils.ML_Set.validation,
+                    radar_product=radar_product)
+            elif model_name == utils.ML_Model.Shallow_CNN_All:
+                x_, y_, _ = batch_generator.get_batch_all_radar_products(
+                    ml_set=utils.ML_Set.validation,
+                    dualPol=dual_pol)
+            else:
+                raise NotImplementedError
+
             val_logs = model.test_on_batch(x_, y_)
             ml_utils.write_log(callback, val_names, val_logs, batch_no)
             print progress_string.format(utils.ML_Set.validation.fullname,
@@ -96,17 +118,26 @@ def train(log_path, radar_product, eval_increment=5,
 def main(results):
     os.chdir(settings.WORKING_DIRECTORY)
     radar_product = utils.Radar_Products(results.radar_product)
+    model = utils.ML_Model(results.model)
     if results.log_path is None:
-        log_path = ml_utils.LOG_PATH.format(radar_product.fullname)
+        if results.model == 1:
+            log_path = ml_utils.LOG_PATH.format(model.fullname,
+                                                str(results.dual_pol))
+        else:
+            log_path = ml_utils.LOG_PATH.format(model.fullname,
+                                                radar_product.fullname)
     else:
         log_path = results.log_path
 
+    print log_path
     train(log_path=log_path,
           radar_product=radar_product,
           eval_increment=results.eval_increment,
           num_iterations=results.num_iterations,
           checkpoint_frequency=results.checkpoint_frequency,
-          lr=results.learning_rate)
+          lr=results.learning_rate,
+          model_name=model,
+          dual_pol=results.dual_pol)
 
 
 if __name__ == "__main__":
@@ -173,6 +204,31 @@ if __name__ == "__main__":
             The learning rate of the model, this value must be between 0 and 1
             .e.g. .1, .05, .001
             """
+    )
+
+    parser.add_argument(
+        '-m',
+        '--model',
+        type=int,
+        default=1,
+        help="""
+            Use an integer to select a model from the following list:
+                0 : Shallow CNN
+                1 : Shallow CNN, all radar products
+                2 : Shallow CNN, temporal model
+            """
+    )
+
+    parser.add_argument(
+        '-d',
+        '--dual_pol',
+        type=bool,
+        default=True,
+        help="""
+        This field will only be used if model = 1 
+        True if model is training on dual polarization radar data, false if the
+        model is training on legacy data.
+        """
     )
     results = parser.parse_args()
     main(results)
