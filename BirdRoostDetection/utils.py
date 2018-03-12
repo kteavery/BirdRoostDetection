@@ -37,6 +37,8 @@ class Radar_Products(Enum):
     def __int__(self):
         return self.value
 
+Legacy_radar_products = [Radar_Products.reflectivity, Radar_Products.velocity]
+
 pyart_key_dict = {
     Radar_Products.reflectivity: 'reflectivity',
     Radar_Products.velocity: 'velocity',
