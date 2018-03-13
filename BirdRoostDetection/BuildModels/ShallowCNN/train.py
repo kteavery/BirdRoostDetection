@@ -19,7 +19,7 @@ python train.py \
 --learning_rate=.001 \
 --model=0 \
 --dual_pol=True \
---high_memeory_mode=True
+--high_memory_mode=True
 """
 import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
@@ -52,10 +52,10 @@ def train(log_path, radar_product, eval_increment=5,
         model_name: Select the model to train. Must be of type utils.ML_Model
         dual_pol: True if data training on dual polarization radar data, false
             when training on legacy data.
-        high_memory_mode: True if training in high memory mode. High memeory
+        high_memory_mode: True if training in high memory mode. High memory
             mode reduces the amount of IO operations by keeping all the data in
-            memeory during trainig. Not recommended for computes with fewer than
-            8 GB of memeory.
+            memory during trainig. Not recommended for computes with fewer than
+            8 GB of memory.
     """
     batch_generator = readMLData.Batch_Generator(
         ml_label_csv=settings.LABEL_CSV,
@@ -147,7 +147,7 @@ def main(results):
           lr=results.learning_rate,
           model_name=model,
           dual_pol=results.dual_pol,
-          high_memory_mode=results.high_memeory_mode)
+          high_memory_mode=results.high_memory_mode)
 
 
 if __name__ == "__main__":
@@ -243,14 +243,14 @@ if __name__ == "__main__":
 
     parser.add_argument(
         '-hm',
-        '--high_memeory_mode',
+        '--high_memory_mode',
         type=bool,
         default=False,
         help="""
             If true then all of the data will be read in at the beginning and 
-            stored in memeory. Otherwise only one batch of data will be in 
-            memeory at a time. high_memory_mode is good for machines with slow 
-            IO and at least 8 GB of memeory available.
+            stored in memory. Otherwise only one batch of data will be in 
+            memory at a time. high_memory_mode is good for machines with slow 
+            IO and at least 8 GB of memory available.
             """
     )
     results = parser.parse_args()
