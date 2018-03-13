@@ -16,9 +16,10 @@ python train.py \
 --eval_increment=5 \
 --num_iterations=2500 \
 --checkpoint_frequency=100 \
---learning_rate=.001
---model=0
-
+--learning_rate=.001 \
+--model=0 \
+--dual_pol=True \
+--high_memeory_mode=True
 """
 import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
@@ -32,7 +33,8 @@ from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
 
 def train(log_path, radar_product, eval_increment=5,
           num_iterations=2500, checkpoint_frequency=100, lr=.0001,
-          model_name=utils.ML_Model.Shallow_CNN, dual_pol=True):
+          model_name=utils.ML_Model.Shallow_CNN, dual_pol=True,
+          high_memory_mode=False):
     """"Train the shallow CNN model on a single radar product.
 
     Args:
@@ -47,11 +49,18 @@ def train(log_path, radar_product, eval_increment=5,
             perform before saving out a checkpoint of the model training.
         lr: The learning rate of the model, this value must be between 0 and 1.
             e.g. .1, .05, .001
-        model_name, Select the model to train. Must be of type utils.ML_Model
+        model_name: Select the model to train. Must be of type utils.ML_Model
+        dual_pol: True if data training on dual polarization radar data, false
+            when training on legacy data.
+        high_memory_mode: True if training in high memory mode. High memeory
+            mode reduces the amount of IO operations by keeping all the data in
+            memeory during trainig. Not recommended for computes with fewer than
+            8 GB of memeory.
     """
     batch_generator = readMLData.Batch_Generator(
         ml_label_csv=settings.LABEL_CSV,
-        ml_split_csv=settings.ML_SPLITS_DATA)
+        ml_split_csv=settings.ML_SPLITS_DATA,
+        high_memory_mode=high_memory_mode)
 
     save_file = ml_utils.KERAS_SAVE_FILE.format(radar_product.fullname, '{}')
 
@@ -137,7 +146,8 @@ def main(results):
           checkpoint_frequency=results.checkpoint_frequency,
           lr=results.learning_rate,
           model_name=model,
-          dual_pol=results.dual_pol)
+          dual_pol=results.dual_pol,
+          high_memory_mode=results.high_memeory_mode)
 
 
 if __name__ == "__main__":
@@ -225,10 +235,23 @@ if __name__ == "__main__":
         type=bool,
         default=True,
         help="""
-        This field will only be used if model = 1 
-        True if model is training on dual polarization radar data, false if the
-        model is training on legacy data.
-        """
+            This field will only be used if model = 1 
+            True if model is training on dual polarization radar data, false if 
+            the model is training on legacy data.
+            """
+    )
+
+    parser.add_argument(
+        '-hm',
+        '--high_memeory_mode',
+        type=bool,
+        default=False,
+        help="""
+            If true then all of the data will be read in at the beginning and 
+            stored in memeory. Otherwise only one batch of data will be in 
+            memeory at a time. high_memory_mode is good for machines with slow 
+            IO and at least 8 GB of memeory available.
+            """
     )
     results = parser.parse_args()
     main(results)
