@@ -1,4 +1,5 @@
 from enum import Enum
+import os
 
 RADAR_FILE_DIR = 'radarfiles/'
 RADAR_IMAGE_DIR = 'radarimages/'
@@ -60,3 +61,22 @@ pyart_key_dict = {
     Radar_Products.diff_reflectivity: 'differential_reflectivity',
     Radar_Products.cc: 'cross_correlation_ratio'
 }
+
+
+def getListOfFilesInDirectory(dir, fileType):
+    """Given a folder, recursively return the names of all files of given type.
+
+    Args:
+        dir: path to folder, string
+        fileType: Example: ".txt" or ".png"
+
+    Returns:
+        list of fileNames
+    """
+    fileNames = []
+    for root, dirs, files in os.walk(dir):
+        for f in files:
+            if os.path.splitext(f)[1].lower() == fileType:
+                fullPath = os.path.join(root, f)
+                fileNames.append(fullPath)
+    return fileNames

@@ -21,14 +21,16 @@ python train.py \
 --dual_pol=True \
 --high_memory_mode=True
 """
+import argparse
+import os
+
+from keras.callbacks import TensorBoard
+
 import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
-from BirdRoostDetection.BuildModels import readMLData
 from BirdRoostDetection.BuildModels import ml_utils
-from keras.callbacks import TensorBoard
-import os
-import argparse
 from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
+from BirdRoostDetection.ReadData import BatchGenerator
 
 
 def train(log_path, radar_product, eval_increment=5,
@@ -57,7 +59,7 @@ def train(log_path, radar_product, eval_increment=5,
             memory during trainig. Not recommended for computes with fewer than
             8 GB of memory.
     """
-    batch_generator = readMLData.Batch_Generator(
+    batch_generator = BatchGenerator.Batch_Generator(
         ml_label_csv=settings.LABEL_CSV,
         ml_split_csv=settings.ML_SPLITS_DATA,
         high_memory_mode=high_memory_mode)

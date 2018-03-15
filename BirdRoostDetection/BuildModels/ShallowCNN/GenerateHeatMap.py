@@ -1,12 +1,14 @@
-import BirdRoostDetection.LoadSettings as settings
 import os
-from BirdRoostDetection.BuildModels import readMLData
-from BirdRoostDetection.BuildModels import ml_utils
-import numpy as np
-import matplotlib.pyplot as plt
-from BirdRoostDetection import utils
 import sys
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 import BirdRoostDetection.BuildModels.ShallowCNN.model as ml_model
+import BirdRoostDetection.LoadSettings as settings
+from BirdRoostDetection import utils
+from BirdRoostDetection.BuildModels import ml_utils
+from BirdRoostDetection.ReadData import BatchGenerator
 
 fill_color = 255
 nan = float('nan')
@@ -49,7 +51,7 @@ def prediction_heat_map_helper(i, j, width, height, stride, img, model,
 
 
 def create_heatmaps(log_path, radar_product, epoch=''):
-    batch_generator = readMLData.Batch_Generator(
+    batch_generator = BatchGenerator.Batch_Generator(
         ml_label_csv=settings.LABEL_CSV,
         ml_split_csv=settings.ML_SPLITS_DATA,
         default_batch_size=64)

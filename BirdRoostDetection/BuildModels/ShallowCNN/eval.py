@@ -15,13 +15,14 @@ python eval.py \
 --log_path=model/Reflectivity/Reflectivity.h5
 
 """
+import argparse
 import os
-from BirdRoostDetection.BuildModels import readMLData
-from BirdRoostDetection.BuildModels import ml_utils
+
+import BirdRoostDetection.BuildModels.ShallowCNN.model as ml_model
 import BirdRoostDetection.LoadSettings as settings
 from BirdRoostDetection import utils
-import argparse
-import BirdRoostDetection.BuildModels.ShallowCNN.model as ml_model
+from BirdRoostDetection.BuildModels import ml_utils
+from BirdRoostDetection.ReadData import BatchGenerator
 
 
 def eval(log_path, radar_product):
@@ -34,7 +35,7 @@ def eval(log_path, radar_product):
                 should be a value of type utils.Radar_Products.
 
         """
-    batch_generator = readMLData.Batch_Generator(
+    batch_generator = BatchGenerator.Batch_Generator(
         ml_label_csv=settings.LABEL_CSV,
         ml_split_csv=settings.ML_SPLITS_DATA,
         validate_k_index=3,

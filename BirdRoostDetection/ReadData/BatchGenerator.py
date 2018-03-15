@@ -1,88 +1,8 @@
 import os
 import pandas
-import datetime
-from BirdRoostDetection.PrepareData import NexradUtils
+from BirdRoostDetection.ReadData import Labels
 import numpy as np
-from PIL import Image
 from BirdRoostDetection import utils
-
-
-def getListOfFilesInDirectory(dir, fileType):
-    """Given a folder, recursively return the names of all files of given type.
-
-    Args:
-        dir: path to folder, string
-        fileType: Example: ".txt" or ".png"
-
-    Returns:
-        list of fileNames
-    """
-    fileNames = []
-    for root, dirs, files in os.walk(dir):
-        for f in files:
-            if os.path.splitext(f)[1].lower() == fileType:
-                fullPath = os.path.join(root, f)
-                fileNames.append(fullPath)
-    return fileNames
-
-
-class ML_Label():
-    """This class contains all the information needed for a single ML label.
-
-    Class Variables:
-        self.fileName: The filename, RRRRYYYYMMDD_HHMMSS_VO#
-        self.is_roost: True is it the file contains a roost
-        self.roost_id: The id of the roost, -1 if no roost
-        self.latitude: The latitude of the roost in the radar file
-        self.longitude: The longitude of the roost in the radar file
-        self.timestamp: The radius of the roost in the radar file
-        self.sunrise_time: The sunrise time at the lat, lon coordinates
-        self.image_paths: A dictionary that contains path to the images with the
-            following radar products : reflectivity, velocity, rho_hv, zdr
-    """
-
-    def __init__(self, pd_row, root_dir, high_memory_mode):
-        """Initialize class using roost directory and pandas dataframe row.
-
-        Args:
-            pd_row: A pandas dataframe row read in from a csv with the format
-            in ml_labels_example.csv
-            root_dir: The directory where the images as stored.
-            high_memory_mode: Boolean, if true then all of the data will be read
-            in at the beginning and stored in memeory. Otherwise only one batch
-            of data will be in memeory at a time. high_memory_mode is good
-            for machines with slow IO and at least 8 GB of memeory available.
-
-        """
-        self.high_memory_mode = high_memory_mode
-        self.fileName = pd_row['AWS_file']
-        self.is_roost = pd_row['Roost']
-        self.roost_id = pd_row['roost_id']
-        self.latitude = pd_row['lat']
-        self.longitude = pd_row['lon']
-        self.radius = pd_row['radius']
-        self.timestamp = datetime.datetime.strptime(pd_row['roost_time'],
-                                                    '%Y-%m-%d %H:%M:%S')
-        self.sunrise_time = datetime.datetime.strptime(pd_row['sunrise_time'],
-                                                       '%Y-%m-%d %H:%M:%S')
-        self.images = {}
-        for radar_prodcut in utils.Radar_Products:
-            image_path = self.__get_radar_product_path(
-                root_dir, radar_prodcut.fullname)
-            if self.high_memory_mode:
-                self.images[radar_prodcut] = load_image(image_path)
-            else:
-                self.images[radar_prodcut] = image_path
-
-    def get_image(self, radar_product):
-        if self.high_memory_mode:
-            return self.images[radar_product]
-        return load_image(self.images[radar_product])
-
-    def __get_radar_product_path(self, root_dir, radar_product):
-        return os.path.join(root_dir, '{1}/',
-                            NexradUtils.getBasePath(self.fileName),
-                            '{0}_{1}.png').format(self.fileName, radar_product)
 
 
 class Batch_Generator():
@@ -117,8 +37,9 @@ class Batch_Generator():
 
         ml_label_pd = pandas.read_csv(ml_label_csv)
         for index, row in ml_label_pd.iterrows():
-            self.label_dict[row['AWS_file']] = ML_Label(row, self.root_dir,
-                                                        high_memory_mode)
+            self.label_dict[row['AWS_file']] = Labels.ML_Label(row,
+                                                               self.root_dir,
+                                                               high_memory_mode)
         self.batch_size = default_batch_size
 
     def __set_ml_sets(self,
@@ -141,8 +62,9 @@ class Batch_Generator():
         """
         ml_split_pd = pandas.read_csv(ml_split_csv)
         # Remove files that weren't found
-        all_files = getListOfFilesInDirectory(self.root_dir + '/All_Color',
-                                              '.png')
+        all_files = utils.getListOfFilesInDirectory(
+            self.root_dir + '/All_Color',
+            '.png')
         all_files_dict = {}
         for i in range(len(all_files)):
             all_files_dict[
@@ -262,7 +184,7 @@ class Batch_Generator():
         roost_sets = self.roost_sets
         no_roost_sets = self.no_roost_sets
         if radar_product == utils.Radar_Products.cc or \
-                radar_product == utils.Radar_Products.diff_reflectivity:
+                        radar_product == utils.Radar_Products.diff_reflectivity:
             roost_sets = self.roost_sets_V06
             no_roost_sets = self.no_roost_sets_V06
         for ml_sets in [roost_sets, no_roost_sets]:
@@ -278,23 +200,3 @@ class Batch_Generator():
         shape = train_data_np.shape
         train_data_np = train_data_np.reshape(shape[0], shape[1], shape[2], 1)
         return train_data_np, np.array(ground_truths), np.array(filenames)
-
-
-def load_image(filename):
-    """Load image from filepath.
-
-    Args:
-        filename: The path to the image file.
-
-    Returns:
-        Image as numpy array.
-    """
-    dim = 120
-    if not os.path.exists(filename):
-        return None
-    img = np.array(Image.open(filename))
-    shape = img.shape
-    w_mid = shape[0] / 2
-    h_mid = shape[1] / 2
-    img = img[w_mid - dim:w_mid + dim, h_mid - dim:h_mid + dim]
-    return img
