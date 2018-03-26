@@ -59,19 +59,22 @@ def train(log_path, radar_product, eval_increment=5,
             memory during trainig. Not recommended for computes with fewer than
             8 GB of memory.
     """
-    batch_generator = BatchGenerator.Batch_Generator(
-        ml_label_csv=settings.LABEL_CSV,
-        ml_split_csv=settings.ML_SPLITS_DATA,
-        high_memory_mode=high_memory_mode)
-
     save_file = ml_utils.KERAS_SAVE_FILE.format(radar_product.fullname, '{}')
 
     checkpoint_path = log_path + ml_utils.CHECKPOINT_DIR
     if not os.path.exists(checkpoint_path):
         os.makedirs(os.path.dirname(checkpoint_path))
     if model_name == utils.ML_Model.Shallow_CNN:
+        batch_generator = BatchGenerator.Single_Product_Batch_Generator(
+            ml_label_csv=settings.LABEL_CSV,
+            ml_split_csv=settings.ML_SPLITS_DATA,
+            high_memory_mode=high_memory_mode)
         model = keras_model.build_model(inputDimensions=(240, 240, 1), lr=lr)
     elif model_name == utils.ML_Model.Shallow_CNN_All:
+        batch_generator = BatchGenerator.Multiple_Product_Batch_Generator(
+            ml_label_csv=settings.LABEL_CSV,
+            ml_split_csv=settings.ML_SPLITS_DATA,
+            high_memory_mode=high_memory_mode)
         model = keras_model.build_model(inputDimensions=(240, 240, 4), lr=lr)
     else:
         raise NotImplementedError
@@ -85,32 +88,21 @@ def train(log_path, radar_product, eval_increment=5,
     progress_string = '{} Epoch: {} Loss: {} Accuracy {}'
 
     for batch_no in range(num_iterations):
-        if model_name == utils.ML_Model.Shallow_CNN:
-            x, y, _ = batch_generator.get_batch(
-                ml_set=utils.ML_Set.training,
-                radar_product=radar_product)
-        elif model_name == utils.ML_Model.Shallow_CNN_All:
-            x, y, _ = batch_generator.get_batch_all_radar_products(
-                ml_set=utils.ML_Set.training,
-                dualPol=dual_pol)
-        else:
-            raise NotImplementedError
+        x, y, _ = batch_generator.get_batch(
+            ml_set=utils.ML_Set.training,
+            dualPol=dual_pol,
+            radar_product=radar_product)
+
         train_logs = model.train_on_batch(x, y)
         print progress_string.format(utils.ML_Set.training.fullname, batch_no,
                                      train_logs[0], train_logs[1])
         ml_utils.write_log(callback, train_names, train_logs, batch_no)
         if (batch_no % eval_increment == 0):
             model.save_weights(log_path + save_file.format(''))
-            if model_name == utils.ML_Model.Shallow_CNN:
-                x_, y_, _ = batch_generator.get_batch(
-                    ml_set=utils.ML_Set.validation,
-                    radar_product=radar_product)
-            elif model_name == utils.ML_Model.Shallow_CNN_All:
-                x_, y_, _ = batch_generator.get_batch_all_radar_products(
-                    ml_set=utils.ML_Set.validation,
-                    dualPol=dual_pol)
-            else:
-                raise NotImplementedError
+            x_, y_, _ = batch_generator.get_batch(
+                ml_set=utils.ML_Set.validation,
+                dualPol=dual_pol,
+                radar_product=radar_product)
 
             val_logs = model.test_on_batch(x_, y_)
             ml_utils.write_log(callback, val_names, val_logs, batch_no)
