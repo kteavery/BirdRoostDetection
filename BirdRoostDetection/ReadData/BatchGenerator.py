@@ -1,3 +1,4 @@
+import BirdRoostDetection.LoadSettings as settings
 import os
 import pandas
 from BirdRoostDetection.ReadData import Labels
@@ -18,29 +19,21 @@ class Batch_Generator():
     """
 
     def __init__(self,
-                 ml_label_csv,
                  ml_split_csv,
                  validate_k_index=3,
                  test_k_index=4,
                  default_batch_size=32,
-                 root_dir=utils.RADAR_IMAGE_DIR,
-                 high_memory_mode=False):
+                 root_dir=utils.RADAR_IMAGE_DIR):
         self.label_dict = {}
         self.root_dir = root_dir
         self.no_roost_sets = {}
         self.roost_sets = {}
         self.no_roost_sets_V06 = {}
         self.roost_sets_V06 = {}
+        self.batch_size = default_batch_size
         self.__set_ml_sets(ml_split_csv,
                            validate_k_index,
                            test_k_index)
-
-        ml_label_pd = pandas.read_csv(ml_label_csv)
-        for index, row in ml_label_pd.iterrows():
-            self.label_dict[row['AWS_file']] = Labels.ML_Label(row,
-                                                               self.root_dir,
-                                                               high_memory_mode)
-        self.batch_size = default_batch_size
 
     def __set_ml_sets(self,
                       ml_split_csv,
@@ -129,9 +122,13 @@ class Single_Product_Batch_Generator(Batch_Generator):
                  default_batch_size=32,
                  root_dir=utils.RADAR_IMAGE_DIR,
                  high_memory_mode=False):
-        Batch_Generator.__init__(self, ml_label_csv, ml_split_csv, validate_k_index,
-                                 test_k_index, default_batch_size, root_dir,
-                                 high_memory_mode)
+        Batch_Generator.__init__(self, ml_split_csv, validate_k_index,
+                                 test_k_index, default_batch_size, root_dir)
+        ml_label_pd = pandas.read_csv(ml_label_csv)
+        for index, row in ml_label_pd.iterrows():
+            self.label_dict[row['AWS_file']] = Labels.ML_Label(row,
+                                                               self.root_dir,
+                                                               high_memory_mode)
 
     def get_batch(self, ml_set, dualPol, radar_product=None):
         """Get a batch of data for machine learning. As a default a batch
@@ -178,10 +175,13 @@ class Multiple_Product_Batch_Generator(Batch_Generator):
                  default_batch_size=32,
                  root_dir=utils.RADAR_IMAGE_DIR,
                  high_memory_mode=False):
-        Batch_Generator.__init__(self, ml_label_csv, ml_split_csv,
-                                 validate_k_index,
-                                 test_k_index, default_batch_size, root_dir,
-                                 high_memory_mode)
+        Batch_Generator.__init__(self, ml_split_csv, validate_k_index,
+                                 test_k_index, default_batch_size, root_dir)
+        ml_label_pd = pandas.read_csv(ml_label_csv)
+        for index, row in ml_label_pd.iterrows():
+            self.label_dict[row['AWS_file']] = Labels.ML_Label(row,
+                                                               self.root_dir,
+                                                               high_memory_mode)
 
     def get_batch(self, ml_set, dualPol, radar_product=None):
         """Get a batch of data for machine learning. This batch contains data
@@ -236,10 +236,30 @@ class Temporal_Batch_Generator(Batch_Generator):
                  default_batch_size=32,
                  root_dir=utils.RADAR_IMAGE_DIR,
                  high_memory_mode=False):
-        Batch_Generator.__init__(self, ml_label_csv, ml_split_csv,
-                                 validate_k_index,
-                                 test_k_index, default_batch_size, root_dir,
-                                 high_memory_mode)
+        # Batch_Generator.__init__(self, ml_split_csv, validate_k_index,
+        #                         test_k_index, default_batch_size, root_dir)
+        self.label_dict = {}
+        ml_label_pd = pandas.read_csv(ml_label_csv)
+        for index, row in ml_label_pd.iterrows():
+            Labels.Temporal_ML_Label(
+                row['AWS_file'],
+                row,
+                root_dir,
+                high_memory_mode,
+                self.label_dict)
 
     def get_batch(self, ml_set, dualPol, radar_product=None):
         raise NotImplementedError
+
+
+def main():
+    batch_generator = Temporal_Batch_Generator(
+        ml_label_csv='ml_labels_temporal_copy.csv',
+        ml_split_csv=settings.ML_SPLITS_DATA,
+        high_memory_mode=False)
+    print len(batch_generator.label_dict.keys())
+
+
+if __name__ == "__main__":
+    os.chdir(settings.WORKING_DIRECTORY)
+    main()
