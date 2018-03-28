@@ -36,7 +36,7 @@ from BirdRoostDetection.ReadData import BatchGenerator
 def train(log_path, radar_product, eval_increment=5,
           num_iterations=2500, checkpoint_frequency=100, lr=.0001,
           model_name=utils.ML_Model.Shallow_CNN, dual_pol=True,
-          high_memory_mode=False):
+          high_memory_mode=False, num_temporal_data=0):
     """"Train the shallow CNN model on a single radar product.
 
     Args:
@@ -77,7 +77,12 @@ def train(log_path, radar_product, eval_increment=5,
             high_memory_mode=high_memory_mode)
         model = keras_model.build_model(inputDimensions=(240, 240, 4), lr=lr)
     else:
-        raise NotImplementedError
+        batch_generator = BatchGenerator.Temporal_Batch_Generator(
+            ml_label_csv=settings.LABEL_CSV,
+            ml_split_csv=settings.ML_SPLITS_DATA,
+            high_memory_mode=False)
+        model = keras_model.build_model(
+            inputDimensions=(240, 240, num_temporal_data * 2 + 1), lr=lr)
 
     # Setup callbacks
     callback = TensorBoard(log_path)
@@ -88,27 +93,36 @@ def train(log_path, radar_product, eval_increment=5,
     progress_string = '{} Epoch: {} Loss: {} Accuracy {}'
 
     for batch_no in range(num_iterations):
-        x, y, _ = batch_generator.get_batch(
-            ml_set=utils.ML_Set.training,
-            dualPol=dual_pol,
-            radar_product=radar_product)
-
-        train_logs = model.train_on_batch(x, y)
-        print progress_string.format(utils.ML_Set.training.fullname, batch_no,
-                                     train_logs[0], train_logs[1])
-        ml_utils.write_log(callback, train_names, train_logs, batch_no)
-        if (batch_no % eval_increment == 0):
-            model.save_weights(log_path + save_file.format(''))
-            x_, y_, _ = batch_generator.get_batch(
-                ml_set=utils.ML_Set.validation,
+        try:
+            x, y, _ = batch_generator.get_batch(
+                ml_set=utils.ML_Set.training,
                 dualPol=dual_pol,
-                radar_product=radar_product)
+                radar_product=radar_product,
+                num_temporal_data=num_temporal_data)
 
-            val_logs = model.test_on_batch(x_, y_)
-            ml_utils.write_log(callback, val_names, val_logs, batch_no)
-            print progress_string.format(utils.ML_Set.validation.fullname,
+            train_logs = model.train_on_batch(x, y)
+            print progress_string.format(utils.ML_Set.training.fullname,
                                          batch_no,
-                                         val_logs[0], val_logs[1])
+                                         train_logs[0], train_logs[1])
+            ml_utils.write_log(callback, train_names, train_logs, batch_no)
+        except:
+            None
+        if (batch_no % eval_increment == 0):
+            try:
+                model.save_weights(log_path + save_file.format(''))
+                x_, y_, _ = batch_generator.get_batch(
+                    ml_set=utils.ML_Set.validation,
+                    dualPol=dual_pol,
+                    radar_product=radar_product,
+                    num_temporal_data=num_temporal_data)
+
+                val_logs = model.test_on_batch(x_, y_)
+                ml_utils.write_log(callback, val_names, val_logs, batch_no)
+                print progress_string.format(utils.ML_Set.validation.fullname,
+                                             batch_no,
+                                             val_logs[0], val_logs[1])
+            except:
+                None
 
         if batch_no % checkpoint_frequency == 0 \
                 or batch_no == num_iterations - 1:
@@ -126,9 +140,13 @@ def main(results):
         if results.model == 1:
             log_path = ml_utils.LOG_PATH.format(model.fullname,
                                                 str(results.dual_pol))
-        else:
+        elif results.model == 0:
             log_path = ml_utils.LOG_PATH.format(model.fullname,
                                                 radar_product.fullname)
+        else:
+            log_path = ml_utils.LOG_PATH_TIME.format(model.fullname,
+                                                     results.num_temporal_data * 2 + 1,
+                                                     radar_product.fullname)
     else:
         log_path = results.log_path
 
@@ -141,7 +159,8 @@ def main(results):
           lr=results.learning_rate,
           model_name=model,
           dual_pol=results.dual_pol,
-          high_memory_mode=results.high_memory_mode)
+          high_memory_mode=results.high_memory_mode,
+          num_temporal_data=results.num_temporal_data)
 
 
 if __name__ == "__main__":
@@ -214,7 +233,7 @@ if __name__ == "__main__":
         '-m',
         '--model',
         type=int,
-        default=1,
+        default=2,
         help="""
             Use an integer to select a model from the following list:
                 0 : Shallow CNN
@@ -246,6 +265,17 @@ if __name__ == "__main__":
             memory at a time. high_memory_mode is good for machines with slow 
             IO and at least 8 GB of memory available.
             """
+    )
+    parser.add_argument(
+        '-td',
+        '--num_temporal_data',
+        type=int,
+        default=0,
+        help="""
+                Only applied to temporal model. This indicates how many time
+                frames in either direction used for training. 0 will give array
+                size of 1, 1 -> 3, 2 -> 5, and 3 -> 7.
+                """
     )
     results = parser.parse_args()
     main(results)

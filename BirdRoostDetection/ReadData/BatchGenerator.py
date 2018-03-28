@@ -95,7 +95,8 @@ class Batch_Generator():
             np.random.shuffle(ml_sets[key])
             np.random.shuffle(ml_sets_V06[key])
 
-    def get_batch_indices(self, ml_sets, ml_set):
+    def get_batch_indices(self, ml_sets, ml_set,
+                          num_temporal_data=0):
         indices = np.random.randint(low=0,
                                     high=len(ml_sets[ml_set]),
                                     size=self.batch_size / 2)
@@ -126,11 +127,13 @@ class Single_Product_Batch_Generator(Batch_Generator):
                                  test_k_index, default_batch_size, root_dir)
         ml_label_pd = pandas.read_csv(ml_label_csv)
         for index, row in ml_label_pd.iterrows():
-            self.label_dict[row['AWS_file']] = Labels.ML_Label(row,
+            self.label_dict[row['AWS_file']] = Labels.ML_Label(row['AWS_file'],
+                                                               row,
                                                                self.root_dir,
                                                                high_memory_mode)
 
-    def get_batch(self, ml_set, dualPol, radar_product=None):
+    def get_batch(self, ml_set, dualPol, radar_product=None,
+                  num_temporal_data=0):
         """Get a batch of data for machine learning. As a default a batch
         contains data from for a single radar product.
 
@@ -179,11 +182,13 @@ class Multiple_Product_Batch_Generator(Batch_Generator):
                                  test_k_index, default_batch_size, root_dir)
         ml_label_pd = pandas.read_csv(ml_label_csv)
         for index, row in ml_label_pd.iterrows():
-            self.label_dict[row['AWS_file']] = Labels.ML_Label(row,
+            self.label_dict[row['AWS_file']] = Labels.ML_Label(row['AWS_file'],
+                                                               row,
                                                                self.root_dir,
                                                                high_memory_mode)
 
-    def get_batch(self, ml_set, dualPol, radar_product=None):
+    def get_batch(self, ml_set, dualPol, radar_product=None,
+                  num_temporal_data=0):
         """Get a batch of data for machine learning. This batch contains data
         with four channels in it, one for each radar product. For dualPol data
         this will be four radar products, and for legacy data this will be two
@@ -236,9 +241,8 @@ class Temporal_Batch_Generator(Batch_Generator):
                  default_batch_size=32,
                  root_dir=utils.RADAR_IMAGE_DIR,
                  high_memory_mode=False):
-        # Batch_Generator.__init__(self, ml_split_csv, validate_k_index,
-        #                         test_k_index, default_batch_size, root_dir)
-        self.label_dict = {}
+        Batch_Generator.__init__(self, ml_split_csv, validate_k_index,
+                                 test_k_index, default_batch_size, root_dir)
         ml_label_pd = pandas.read_csv(ml_label_csv)
         for index, row in ml_label_pd.iterrows():
             Labels.Temporal_ML_Label(
@@ -248,16 +252,40 @@ class Temporal_Batch_Generator(Batch_Generator):
                 high_memory_mode,
                 self.label_dict)
 
-    def get_batch(self, ml_set, dualPol, radar_product=None):
-        raise NotImplementedError
+    def get_batch(self, ml_set, dualPol, radar_product=None,
+                  num_temporal_data=0):
+        ground_truths, train_data, filenames, roost_sets, no_roost_sets = \
+            Batch_Generator.get_batch(self, ml_set, dualPol, radar_product)
+        for ml_sets in [roost_sets, no_roost_sets]:
+            indices = Batch_Generator.get_batch_indices(self, ml_sets, ml_set)
+            for index in indices:
+                filename = ml_sets[ml_set][index]
+                filenames.append(filename)
+                is_roost = int(self.label_dict[filename].is_roost)
+                images = []
+                channel_files = self.label_dict[filename].fileNames[
+                                3 - num_temporal_data: 4 + num_temporal_data]
+                for image_name in channel_files:
+                    image = self.label_dict[image_name].get_image(radar_product)
+                    images.append(image)
+                ground_truths.append([is_roost, 1 - is_roost])
+                train_data.append(images)
+        # Update to channel last ordering
+        train_data = np.rollaxis(np.array(train_data), 1, 4)
+        return train_data, np.array(ground_truths), np.array(
+            filenames)
 
 
 def main():
     batch_generator = Temporal_Batch_Generator(
-        ml_label_csv='ml_labels_temporal_copy.csv',
+        ml_label_csv='ml_labels_temporal.csv',
         ml_split_csv=settings.ML_SPLITS_DATA,
         high_memory_mode=False)
+
     print len(batch_generator.label_dict.keys())
+    x, y, f = batch_generator.get_batch(utils.ML_Set.testing, True,
+                                        utils.Radar_Products.reflectivity,
+                                        num_temporal_data=0)
 
 
 if __name__ == "__main__":

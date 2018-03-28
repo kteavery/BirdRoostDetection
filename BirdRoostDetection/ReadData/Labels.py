@@ -22,7 +22,7 @@ class ML_Label():
             following radar products : reflectivity, velocity, rho_hv, zdr
     """
 
-    def __init__(self, pd_row, root_dir, high_memory_mode):
+    def __init__(self, file_name, pd_row, root_dir, high_memory_mode):
         """Initialize class using roost directory and pandas dataframe row.
 
         Args:
@@ -36,7 +36,7 @@ class ML_Label():
 
         """
         self.high_memory_mode = high_memory_mode
-        self.fileName = pd_row['AWS_file']
+        self.fileName = file_name
         self.is_roost = pd_row['Roost']
         self.roost_id = pd_row['roost_id']
         self.latitude = pd_row['lat']
@@ -91,7 +91,7 @@ class Temporal_ML_Label(ML_Label):
                  label_dict):
         if not (file_name in label_dict):
             # print pd_row
-            ML_Label.__init__(self, pd_row, root_dir, high_memory_mode)
+            ML_Label.__init__(self, file_name, pd_row, root_dir, high_memory_mode)
             self.fileNames = ast.literal_eval(pd_row['AWS_files'])
             label_dict[file_name] = self
             for name in self.fileNames:
