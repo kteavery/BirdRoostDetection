@@ -1,4 +1,3 @@
-import BirdRoostDetection.LoadSettings as settings
 import os
 import pandas
 from BirdRoostDetection.ReadData import Labels
@@ -267,27 +266,11 @@ class Temporal_Batch_Generator(Batch_Generator):
                                 3 - num_temporal_data: 4 + num_temporal_data]
                 for image_name in channel_files:
                     image = self.label_dict[image_name].get_image(radar_product)
-                    images.append(image)
-                ground_truths.append([is_roost, 1 - is_roost])
-                train_data.append(images)
-        # Update to channel last ordering
+                    if image is not None:
+                        images.append(image)
+                if len(images) == (num_temporal_data * 2) + 1:
+                    ground_truths.append([is_roost, 1 - is_roost])
+                    train_data.append(images)
         train_data = np.rollaxis(np.array(train_data), 1, 4)
         return train_data, np.array(ground_truths), np.array(
             filenames)
-
-
-def main():
-    batch_generator = Temporal_Batch_Generator(
-        ml_label_csv='ml_labels_temporal.csv',
-        ml_split_csv=settings.ML_SPLITS_DATA,
-        high_memory_mode=False)
-
-    print len(batch_generator.label_dict.keys())
-    x, y, f = batch_generator.get_batch(utils.ML_Set.testing, True,
-                                        utils.Radar_Products.reflectivity,
-                                        num_temporal_data=0)
-
-
-if __name__ == "__main__":
-    os.chdir(settings.WORKING_DIRECTORY)
-    main()

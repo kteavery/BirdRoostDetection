@@ -23,13 +23,11 @@ python train.py \
 """
 import argparse
 import os
-
-from keras.callbacks import TensorBoard
-
 import BirdRoostDetection.LoadSettings as settings
+from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
+from keras.callbacks import TensorBoard
 from BirdRoostDetection import utils
 from BirdRoostDetection.BuildModels import ml_utils
-from BirdRoostDetection.BuildModels.ShallowCNN import model as keras_model
 from BirdRoostDetection.ReadData import BatchGenerator
 
 
@@ -105,8 +103,8 @@ def train(log_path, radar_product, eval_increment=5,
                                          batch_no,
                                          train_logs[0], train_logs[1])
             ml_utils.write_log(callback, train_names, train_logs, batch_no)
-        except:
-            None
+        except Exception as e:
+            print e.message
         if (batch_no % eval_increment == 0):
             try:
                 model.save_weights(log_path + save_file.format(''))
@@ -121,8 +119,8 @@ def train(log_path, radar_product, eval_increment=5,
                 print progress_string.format(utils.ML_Set.validation.fullname,
                                              batch_no,
                                              val_logs[0], val_logs[1])
-            except:
-                None
+            except Exception as e:
+                print e.message
 
         if batch_no % checkpoint_frequency == 0 \
                 or batch_no == num_iterations - 1:
@@ -270,7 +268,7 @@ if __name__ == "__main__":
         '-td',
         '--num_temporal_data',
         type=int,
-        default=0,
+        default=1,
         help="""
                 Only applied to temporal model. This indicates how many time
                 frames in either direction used for training. 0 will give array

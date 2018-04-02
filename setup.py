@@ -16,6 +16,7 @@ if __name__ == '__main__':
             'BirdRoostDetection',
             'BirdRoostDetection.BuildModels',
             'BirdRoostDetection.BuildModels.ShallowCNN',
+            'BirdRoostDetection.BuildModels.Inception',
             'BirdRoostDetection.PrepareData',
             'BirdRoostDetection.ReadData'
         ],

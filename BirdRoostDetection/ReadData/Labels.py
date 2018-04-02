@@ -1,6 +1,5 @@
 import os
 import datetime
-from BirdRoostDetection.PrepareData import NexradUtils
 import numpy as np
 from PIL import Image
 from BirdRoostDetection import utils
@@ -62,8 +61,25 @@ class ML_Label():
 
     def __get_radar_product_path(self, root_dir, radar_product):
         return os.path.join(root_dir, '{1}/',
-                            NexradUtils.getBasePath(self.fileName),
+                            self.getBasePath(self.fileName),
                             '{0}_{1}.png').format(self.fileName, radar_product)
+
+    def getBasePath(self, radarFileName):
+        """Given a single Nexrad radar file, create a path to save file at.
+
+        In order to avoid saving too many files in a single folder, we save
+        radar
+        files and image in a path order using radar/year/month/day.
+
+        Args:
+            radarFileName: The name of the NEXRAD radar file.
+
+        Returns:
+            string path, RRRR/YYYY/MM/DD
+        """
+        radarFileName = os.path.basename(radarFileName)
+        return os.path.join(radarFileName[0:4], radarFileName[4:8],
+                            radarFileName[8:10], radarFileName[10:12])
 
     def load_image(self, filename):
         """Load image from filepath.
@@ -86,12 +102,12 @@ class ML_Label():
 
 
 class Temporal_ML_Label(ML_Label):
-
     def __init__(self, file_name, pd_row, root_dir, high_memory_mode,
                  label_dict):
         if not (file_name in label_dict):
             # print pd_row
-            ML_Label.__init__(self, file_name, pd_row, root_dir, high_memory_mode)
+            ML_Label.__init__(self, file_name, pd_row, root_dir,
+                              high_memory_mode)
             self.fileNames = ast.literal_eval(pd_row['AWS_files'])
             label_dict[file_name] = self
             for name in self.fileNames:
