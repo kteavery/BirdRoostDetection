@@ -113,3 +113,17 @@ class Temporal_ML_Label(ML_Label):
             for name in self.fileNames:
                 Temporal_ML_Label(name, pd_row, root_dir, high_memory_mode,
                                   label_dict)
+
+
+class Color_ML_Label(ML_Label):
+    def __init__(self, file_name, pd_row, root_dir, high_memory_mode):
+        ML_Label.__init__(self, file_name, pd_row, root_dir, high_memory_mode)
+        for radar_prodcut in utils.Radar_Products:
+            image_path = self.__get_radar_product_path(
+                root_dir, radar_prodcut.fullname)
+            self.images[radar_prodcut] = image_path
+
+    def __get_radar_product_path(self, root_dir, radar_product):
+        return os.path.join(root_dir, '{1}_Color/',
+                            self.getBasePath(self.fileName),
+                            '{0}_{1}.png').format(self.fileName, radar_product)

@@ -106,8 +106,8 @@ def train(log_path, radar_product, eval_increment=5,
         except Exception as e:
             print e.message
         if (batch_no % eval_increment == 0):
+            model.save_weights(log_path + save_file.format(''))
             try:
-                model.save_weights(log_path + save_file.format(''))
                 x_, y_, _ = batch_generator.get_batch(
                     ml_set=utils.ML_Set.validation,
                     dualPol=dual_pol,

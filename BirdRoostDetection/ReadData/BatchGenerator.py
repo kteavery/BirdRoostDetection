@@ -274,3 +274,59 @@ class Temporal_Batch_Generator(Batch_Generator):
         train_data = np.rollaxis(np.array(train_data), 1, 4)
         return train_data, np.array(ground_truths), np.array(
             filenames)
+
+
+class Color_Image_Batch_Generator(Batch_Generator):
+    def __init__(self,
+                 ml_label_csv,
+                 ml_split_csv,
+                 validate_k_index=3,
+                 test_k_index=4,
+                 default_batch_size=32,
+                 root_dir=utils.RADAR_IMAGE_DIR,
+                 high_memory_mode=False):
+        Batch_Generator.__init__(self, ml_split_csv, validate_k_index,
+                                 test_k_index, default_batch_size, root_dir)
+        ml_label_pd = pandas.read_csv(ml_label_csv)
+        for index, row in ml_label_pd.iterrows():
+            self.label_dict[row['AWS_file']] = Labels.Color_ML_Label(
+                row['AWS_file'],
+                row,
+                self.root_dir,
+                high_memory_mode)
+
+    def get_batch(self, ml_set, dualPol, radar_product=None,
+                  num_temporal_data=0):
+        """Get a batch of data for machine learning. As a default a batch
+        contains data from for a single radar product.
+
+        Args:
+            ml_set: ML_Set enum value, train, test, or validation.
+            radar_product: Radar_Product enum value, reflectivity, velocity,
+                zdr, or rho_hv.
+
+        Returns:
+            train_data, ground_truth, filenames:
+                The ground truth is an array of batch size, where each item
+                in the array contains a single ground truth label.
+                The train_data is an array of images, corresponding to the
+                ground truth values.
+                filenames is an array of filenames, corresponding to the
+                ground truth values.
+        """
+        ground_truths, train_data, filenames, roost_sets, no_roost_sets = \
+            Batch_Generator.get_batch(self, ml_set, dualPol, radar_product)
+        for ml_sets in [roost_sets, no_roost_sets]:
+            indices = Batch_Generator.get_batch_indices(self, ml_sets, ml_set)
+            for index in indices:
+                filename = ml_sets[ml_set][index]
+                filenames.append(filename)
+                is_roost = int(self.label_dict[filename].is_roost)
+                image = self.label_dict[filename].get_image(radar_product)
+                ground_truths.append([is_roost, 1 - is_roost])
+                train_data.append(image)
+        train_data_np = np.array(train_data)
+        shape = train_data_np.shape
+        train_data_np = train_data_np.reshape(shape[0], shape[1], shape[2],
+                                              1)
+        return train_data_np, np.array(ground_truths), np.array(filenames)
