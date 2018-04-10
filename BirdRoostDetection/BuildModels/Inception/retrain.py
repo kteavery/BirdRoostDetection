@@ -117,7 +117,7 @@ FLAGS = None
 MAX_NUM_IMAGES_PER_CLASS = 2 ** 27 - 1  # ~134M
 
 # The location where variable checkpoints will be stored.
-CHECKPOINT_NAME = 'tf_files/_retrain_checkpoint'
+CHECKPOINT_NAME = 'tf_files/{}/_retrain_checkpoint'
 
 
 def create_image_lists(radar_product):
@@ -1037,6 +1037,14 @@ def main(_):
     radar_product = utils.Radar_Products(FLAGS.radar_product)
     image_lists = create_image_lists(radar_product)
 
+    # update filenames
+    FLAGS.output_graph = FLAGS.output_graph.format(radar_product.fullname)
+    FLAGS.output_labels = FLAGS.output_labels.format(radar_product.fullname)
+    FLAGS.summaries_dir = FLAGS.summaries_dir.format(radar_product.fullname)
+    FLAGS.model_dir = FLAGS.model_dir.format(radar_product.fullname)
+    FLAGS.saved_model_dir = FLAGS.saved_model_dir.format(radar_product.fullname)
+    global CHECKPOINT_NAME
+    CHECKPOINT_NAME = CHECKPOINT_NAME.format(radar_product.fullname)
     class_count = len(image_lists.keys())
     if class_count == 0:
         tf.logging.error(
@@ -1198,7 +1206,7 @@ def main(_):
             f.write('\n'.join(image_lists.keys()) + '\n')
 
         export_model(model_info, class_count,
-                     FLAGS.saved_model_dir + '/' + radar_product.fullname)
+                     FLAGS.saved_model_dir)
 
 
 if __name__ == '__main__':
@@ -1227,25 +1235,25 @@ if __name__ == '__main__':
     parser.add_argument(
         '--output_graph',
         type=str,
-        default='tf_files/output_graph.pb',
+        default='tf_files/{}/output_graph.pb',
         help='Where to save the trained graph.'
     )
     parser.add_argument(
         '--output_labels',
         type=str,
-        default='tf_files/output_labels.txt',
+        default='tf_files/{}/output_labels.txt',
         help='Where to save the trained graph\'s labels.'
     )
     parser.add_argument(
         '--summaries_dir',
         type=str,
-        default='tf_files/retrain_logs',
+        default='tf_files/{}/retrain_logs',
         help='Where to save summary logs for TensorBoard.'
     )
     parser.add_argument(
         '--how_many_training_steps',
         type=int,
-        default=4000,
+        default=10000,
         help='How many training steps to run before ending.'
     )
     parser.add_argument(
@@ -1313,7 +1321,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--model_dir',
         type=str,
-        default='tf_files/models/',
+        default='tf_files/{}/models/',
         help="""\
       Path to classify_image_graph_def.pb,
       imagenet_synset_to_human_label_map.txt, and
@@ -1381,9 +1389,9 @@ if __name__ == '__main__':
       for more information on Mobilenet.\
       """)
     parser.add_argument(
-        '--tf_files/saved_model_dir',
+        '--saved_model_dir',
         type=str,
-        default='saved_models/1/',
+        default='tf_files/{}/saved_models/1/',
         help='Where to save the exported graph.')
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
