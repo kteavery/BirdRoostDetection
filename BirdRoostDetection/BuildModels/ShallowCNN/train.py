@@ -168,7 +168,7 @@ if __name__ == "__main__":
         '-r',
         '--radar_product',
         type=int,
-        default=0,
+        default=1,
         help="""
             Use an integer to select a radar_product from the following list:
                 0 : Reflectivity
