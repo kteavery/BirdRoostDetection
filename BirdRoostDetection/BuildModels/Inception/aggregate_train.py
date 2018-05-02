@@ -19,7 +19,7 @@ import os
 MAX_NUM_IMAGES_PER_CLASS = 2 ** 27 - 1  # ~134M
 
 dual_pol_fields = [utils.Radar_Products.reflectivity.fullname,
-                 utils.Radar_Products.velocity.fullname,
+                   utils.Radar_Products.velocity.fullname,
                    utils.Radar_Products.cc.fullname,
                    utils.Radar_Products.diff_reflectivity.fullname]
 legacy_fields = [utils.Radar_Products.reflectivity.fullname,
@@ -169,6 +169,7 @@ def train(model, bottleneck_list, num_iterations, save_file, radar_fields,
                                          batch_no,
                                          train_logs[0], train_logs[1])
             ml_utils.write_log(callback, train_names, train_logs, batch_no)
+
         except Exception as e:
             print e.message
         if (batch_no % 1 == 0):
@@ -189,7 +190,7 @@ def train(model, bottleneck_list, num_iterations, save_file, radar_fields,
     model.save_weights(save_file)
 
 
-def create_model(input_dimention):
+def create_model(input_dimention, save=None):
     # input_dim = 4 for dual-pol, 2 for legagy
     model = Sequential()
     model.add(Dense(256, input_dim=input_dimention, activation=None))
@@ -200,6 +201,9 @@ def create_model(input_dimention):
     model.compile(loss='binary_crossentropy',
                   optimizer=keras.optimizers.sgd(lr=.0001),
                   metrics=['accuracy'])
+
+    if save is not None:
+        model.load_weights(save)
     return model
 
 
@@ -212,17 +216,17 @@ def main():
         radar_fields = dual_pol_fields
         save = 'dual_pol.h5'
         model = create_model(8192)
-        callback_dir = '/tmp/model_log/dual_pol/'
+        callback_dir = 'model_log/dual_pol/'
     else:
         radar_field = utils.Radar_Products.reflectivity
         radar_fields = legacy_fields
         save = 'legacy.h5'
         model = create_model(4096)
-        callback_dir = '/tmp/model_log/legacy/'
+        callback_dir = 'model_log/legacy/'
 
     image_lists = create_image_lists(radar_field)
     bottleneck_list = get_bottleneck_list(image_lists, radar_field)
-    train(model, bottleneck_list, 5000, save, radar_fields, callback_dir)
+    train(model, bottleneck_list, 15000, save, radar_fields, callback_dir)
 
 
 if __name__ == '__main__':

@@ -129,7 +129,7 @@ def create_image_lists(radar_product):
 
     ml_label_set = [batch_generator.no_roost_sets, batch_generator.roost_sets]
     if (radar_product == utils.Radar_Products.diff_reflectivity or
-                radar_product == utils.Radar_Products.cc):
+            radar_product == utils.Radar_Products.cc):
         ml_label_set = [batch_generator.no_roost_sets_V06,
                         batch_generator.roost_sets_V06]
     for ml_label, label_name in zip(
@@ -195,7 +195,7 @@ def get_bottleneck_path(image_lists, label_name, index,
     return image_path
 
 
-def create_model_graph(model_info):
+def create_model_graph(model_info, model_dir):
     """"Creates a graph from saved GraphDef file and returns a Graph object.
     Args:
       model_info: Dictionary containing information about the model
@@ -205,7 +205,7 @@ def create_model_graph(model_info):
       manipulating.
     """
     with tf.Graph().as_default() as graph:
-        model_path = os.path.join(FLAGS.model_dir,
+        model_path = os.path.join(model_dir,
                                   model_info['model_file_name'])
         if (not os.path.exists(os.path.dirname(model_path))):
             os.makedirs(os.path.dirname(model_path))
@@ -247,7 +247,7 @@ def run_bottleneck_on_image(sess, image_data, image_data_tensor,
     return bottleneck_values
 
 
-def maybe_download_and_extract(data_url):
+def maybe_download_and_extract(data_url, model_dir):
     """Download and extract model tar file.
     If the pretrained model we're using doesn't already exist, this function
     downloads it from the TensorFlow.org website and unpacks it into a
@@ -255,7 +255,7 @@ def maybe_download_and_extract(data_url):
     Args:
       data_url: Web location of the tar file containing the pretrained model.
     """
-    dest_directory = FLAGS.model_dir
+    dest_directory = model_dir
     if not os.path.exists(dest_directory):
         os.makedirs(dest_directory)
     filename = data_url.split('/')[-1]
@@ -809,7 +809,8 @@ def build_eval_session(model_info, class_count):
       The bottleneck input, ground truth, eval step, and prediction tensors.
     """
     # If quantized, we need to create the correct eval graph for exporting.
-    eval_graph, bottleneck_tensor, _ = create_model_graph(model_info)
+    eval_graph, bottleneck_tensor, _ = create_model_graph(model_info,
+                                                          FLAGS.model_dir)
 
     eval_sess = tf.Session(graph=eval_graph)
     with eval_graph.as_default():
@@ -890,7 +891,7 @@ def create_model_info(architecture):
             return None
         version_string = parts[1]
         if (version_string != '1.0' and version_string != '0.75' and
-                    version_string != '0.5' and version_string != '0.25'):
+                version_string != '0.5' and version_string != '0.25'):
             tf.logging.error(
                 """"The Mobilenet version should be '1.0', '0.75', '0.5', 
                 or '0.25',
@@ -898,7 +899,7 @@ def create_model_info(architecture):
             return None
         size_string = parts[2]
         if (size_string != '224' and size_string != '192' and
-                    size_string != '160' and size_string != '128'):
+                size_string != '160' and size_string != '128'):
             tf.logging.error(
                 """The Mobilenet input size should be '224', '192', '160', 
                 or '128',
@@ -1062,9 +1063,9 @@ def main(_):
         FLAGS.random_brightness)
 
     # Set up the pre-trained graph.
-    maybe_download_and_extract(model_info['data_url'])
+    maybe_download_and_extract(model_info['data_url'], FLAGS.model_dir)
     graph, bottleneck_tensor, resized_image_tensor = (
-        create_model_graph(model_info))
+        create_model_graph(model_info, FLAGS.model_dir))
 
     # Add the new layer that we'll be training.
     with graph.as_default():
@@ -1218,13 +1219,13 @@ if __name__ == '__main__':
         type=int,
         default=3,
         help="""
-                Use an integer to select a radar_product from the following 
-                list:
-                    0 : Reflectivity
-                    1 : Velocity
-                    2 : Correlation Coefficient
-                    3 : Differential Reflectivity
-                """
+            Use an integer to select a radar_product from the following 
+            list:
+                0 : Reflectivity
+                1 : Velocity
+                2 : Correlation Coefficient
+                3 : Differential Reflectivity
+            """
     )
     parser.add_argument(
         '--image_dir',
