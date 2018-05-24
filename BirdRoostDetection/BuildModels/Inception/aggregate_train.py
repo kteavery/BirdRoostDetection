@@ -215,18 +215,19 @@ def main():
         radar_field = utils.Radar_Products.cc
         radar_fields = dual_pol_fields
         save = 'dual_pol.h5'
-        model = create_model(8192)
+        model = create_model(8192, save)
         callback_dir = 'model_log/dual_pol/'
     else:
         radar_field = utils.Radar_Products.reflectivity
         radar_fields = legacy_fields
         save = 'legacy.h5'
-        model = create_model(4096)
+        model = create_model(4096, save)
         callback_dir = 'model_log/legacy/'
+
 
     image_lists = create_image_lists(radar_field)
     bottleneck_list = get_bottleneck_list(image_lists, radar_field)
-    train(model, bottleneck_list, 15000, save, radar_fields, callback_dir)
+    train(model, bottleneck_list, 1500, save, radar_fields, callback_dir)
 
 
 if __name__ == '__main__':
