@@ -139,7 +139,9 @@ def main():
     batch_generator = BatchGenerator.Single_Product_Batch_Generator(
         ml_label_csv=settings.LABEL_CSV,
         ml_split_csv=settings.ML_SPLITS_DATA,
-        default_batch_size=64)
+        default_batch_size=64,
+        high_memory_mode=False,
+    )
 
     radar_product = utils.Radar_Products(3)
     _, _, filenames = batch_generator.get_batch(utils.ML_Set.testing,
