@@ -17,8 +17,10 @@ if __name__ == '__main__':
             'BirdRoostDetection.BuildModels',
             'BirdRoostDetection.BuildModels.ShallowCNN',
             'BirdRoostDetection.BuildModels.Inception',
+            'BirdRoostDetection.BuildModels.Part_Of_Image',
             'BirdRoostDetection.PrepareData',
-            'BirdRoostDetection.ReadData'
+            'BirdRoostDetection.ReadData',
+            'BirdRoostDetection.Analysis'
         ],
         package_data={'BirdRoostDetection': ['settings.json']},
         keywords=[

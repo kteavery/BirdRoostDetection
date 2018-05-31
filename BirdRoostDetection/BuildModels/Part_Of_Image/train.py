@@ -120,7 +120,7 @@ if __name__ == "__main__":
         '-r',
         '--radar_product',
         type=int,
-        default=1,
+        default=0,
         help="""
             Use an integer to select a radar_product from the following list:
                 0 : Reflectivity

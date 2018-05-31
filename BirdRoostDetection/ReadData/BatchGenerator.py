@@ -151,40 +151,81 @@ class Small_Image_Batch_Generator(Batch_Generator):
                 filenames is an array of filenames, corresponding to the
                 ground truth values.
         """
-        ground_truths, train_data, filenames, roost_sets, no_roost_sets = \
-            Batch_Generator.get_batch(self, ml_set, dualPol, radar_product)
-        for ml_sets in [roost_sets, no_roost_sets]:
-            indices = Batch_Generator.get_batch_indices(self, ml_sets, ml_set)
+        # len(ml_sets[ml_set])
+        if ml_set is utils.ML_Set.testing :
+
+            ground_truths, train_data, filenames, roost_sets, no_roost_sets = \
+                Batch_Generator.get_batch(self, ml_set, dualPol, radar_product)
+            #for ml_sets in [roost_sets, no_roost_sets]:
+            print len(roost_sets[ml_set])
+
+            # indices = range(len(roost_sets[ml_set]))
+            indices = np.random.randint(low=0,
+                                    high=len(roost_sets[ml_set]),
+                                    size=750)
             for index in indices:
-                filename = ml_sets[ml_set][index]
+                filename = roost_sets[ml_set][index]
                 label = self.label_dict[filename]
-                is_roost = int(label.is_roost)
                 image = self.label_dict[filename].get_image(radar_product)
-                if is_roost :
-                    radar_loc = NexradUtils.getRadarLocation(filename[0:4])
-                    y = (radar_loc[0] - label.latitude) * 89 + 120
-                    x = (radar_loc[1] - label.longitude) * 72.8 + 120
-                    for i in range(5) :
-                        for j in range(5) :
-                            is_small_roost = 0
-                            x_start = i * 40
-                            x_end = i * 40 + 80
-                            y_start = j * 40
-                            y_end = j * 40 + 80
+                radar_loc = NexradUtils.getRadarLocation(filename[0:4])
+                y = (radar_loc[0] - label.latitude) * 89 + 120
+                x = (radar_loc[1] - label.longitude) * 72.8 + 120
+                for i in range(5) :
+                    for j in range(5) :
+                        is_small_roost = 0
+                        x_start = i * 40
+                        x_end = i * 40 + 80
+                        y_start = j * 40
+                        y_end = j * 40 + 80
 
-                            if x >= x_start and x <= x_end \
-                                and y >= y_start and y <= y_end :
-                                is_small_roost += 1
+                        if x >= x_start and x <= x_end \
+                            and y >= y_start and y <= y_end :
+                            is_small_roost += 1
 
-                            small_image = image[x_start:x_end, y_start:y_end]
-                            ground_truths.append([is_small_roost, 1 - is_small_roost])
-                            filenames.append(filename)
-                            train_data.append(small_image)
-        train_data_np = np.array(train_data)
-        shape = train_data_np.shape
-        train_data_np = train_data_np.reshape(shape[0], shape[1], shape[2],
-                                              1)
-        return train_data_np, np.array(ground_truths), np.array(filenames)
+                        small_image = image[x_start:x_end, y_start:y_end]
+                        ground_truths.append([is_small_roost, 1 - is_small_roost])
+                        filenames.append(filename)
+                        train_data.append(small_image)
+            train_data_np = np.array(train_data)
+            shape = train_data_np.shape
+            train_data_np = train_data_np.reshape(shape[0], shape[1], shape[2],
+                                                  1)
+            return train_data_np, np.array(ground_truths), np.array(filenames)
+        else :
+            ground_truths, train_data, filenames, roost_sets, no_roost_sets = \
+                Batch_Generator.get_batch(self, ml_set, dualPol, radar_product)
+            # for ml_sets in [roost_sets, no_roost_sets]:
+            indices = Batch_Generator.get_batch_indices(self, roost_sets,
+                                                        ml_set)
+            for index in indices:
+                filename = roost_sets[ml_set][index]
+                label = self.label_dict[filename]
+                image = self.label_dict[filename].get_image(radar_product)
+                radar_loc = NexradUtils.getRadarLocation(filename[0:4])
+                y = (radar_loc[0] - label.latitude) * 89 + 120
+                x = (radar_loc[1] - label.longitude) * 72.8 + 120
+                for i in range(5):
+                    for j in range(5):
+                        is_small_roost = 0
+                        x_start = i * 40
+                        x_end = i * 40 + 80
+                        y_start = j * 40
+                        y_end = j * 40 + 80
+
+                        if x >= x_start and x <= x_end \
+                                and y >= y_start and y <= y_end:
+                            is_small_roost += 1
+
+                        small_image = image[x_start:x_end, y_start:y_end]
+                        ground_truths.append(
+                            [is_small_roost, 1 - is_small_roost])
+                        filenames.append(filename)
+                        train_data.append(small_image)
+            train_data_np = np.array(train_data)
+            shape = train_data_np.shape
+            train_data_np = train_data_np.reshape(shape[0], shape[1], shape[2],
+                                                  1)
+            return train_data_np, np.array(ground_truths), np.array(filenames)
 
 class Single_Product_Batch_Generator(Batch_Generator):
     def __init__(self,
