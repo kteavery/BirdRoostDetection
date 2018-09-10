@@ -1,5 +1,6 @@
 # BirdRoostDetection
 Carmen Chilson and Katherine Avery
+
 Paper link: https://zslpublications.onlinelibrary.wiley.com/doi/10.1002/rse2.92
 
 This code was developed for the Oklahoma Biological Survey for a research project. We use machine learning to automate the detection of pre migratory purple martin roosts, their location, and the radius of the roost in NEXRAD radar data.
